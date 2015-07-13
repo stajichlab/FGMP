@@ -49,7 +49,7 @@ if (-e 'fgmp.config'){
 &show_help unless @ARGV; 
 
 # getOptions variables
-my($genome,$protein,$output,$blastdb,$hmm_profiles,$hmm_prefix,$cutoff_file,$verbose_str,$verbose_flg,$quiet_flg,$temp_flg,$help_flg,$threads,$augTraingCutoff) = (undef,undef,undef,undef,undef,undef,undef,undef,0,0,0,0,4,50);
+my($genome,$protein,$output,$blastdb,$hmm_profiles,$hmm_prefix,$cutoff_file,$mark_file,$tag,$verbose_str,$verbose_flg,$quiet_flg,$temp_flg,$help_flg,$threads,$augTraingCutoff) = (undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,0,0,0,0,4,50);
 
 # Reading options
 &which_Options(); 
@@ -116,12 +116,10 @@ unless (-e "$genome.candidates.fa.p2g"){
 
 # recovering exonerate translated matches
 unless (-e "$WRKDIR/$genome.candidates.fa.p2g.aa"){
-
-	# Need to remove the GFF part from the file other the recoverCDS.sh run forever
-	
-	# ici le problem
 	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.p2g | grep -v '^#' | grep -v \'exonerate:protein2genome:local\' > $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
-	Fgmp::execute("$FGMP/src/recoverCDS.sh $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
+#	Fgmp::execute("$FGMP/src/recoverCDS.sh $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
+	Fgmp::execute("perl -pE 's/XXX/$tag/' $FGMP/src/recoverCDS.sh > $FGMP/src/recoverCDS.$tag.sh");  
+	Fgmp::execute("bash $FGMP/src/recoverCDS.$tag.sh $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
 }
 
 # check if the exonerate file is empty, because even empty exonerate generates a minimal outp
@@ -215,11 +213,11 @@ if (-s "$genome.preds.filtered"){
 
 	# need to clean before
 
-	Fgmp::execute("perl -pi.old -E 's/.tmp.aln.trimed//' $genome.unfiltered.renamed.hmmsearch");
-	Fgmp::execute("perl -pi.old -E 's/.aln.trim//' $genome.unfiltered.renamed.hmmsearch");
+#	Fgmp::execute("perl -pi.old -E 's/.tmp.aln.trimed//' $genome.unfiltered.renamed.hmmsearch");
+#	Fgmp::execute("perl -pi.old -E 's/.aln.trim//' $genome.unfiltered.renamed.hmmsearch");
 
 	# filtering	
-	Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $FGMP/data/245Markers.txt --cutoff 0.7"); 
+	Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $mark_file --cutoff 0.7"); 
 	
 	# extract fasta
 	Fgmp::execute("grep \'\^Seq\' $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report | cut -f 1 > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp");
@@ -269,6 +267,8 @@ sub which_Options {
 		"hmm_profiles=s" 	=> \$hmm_profiles, # hmm profiles for filtering predictions
 		"hmm_prefix=s"		=> \$hmm_prefix,
 		"c|cutoff_file=s"	=> \$cutoff_file,
+		"m|mark_file=s"		=> \$mark_file,
+		"t|tag=s"		=> \$tag,
 		"v|verbose"		=> \$verbose_flg,	# verbose
 		"q|quiet"		=> \$quiet_flg,	# quiet mode
 		"tmp"			=> \$temp_flg,	# keep tempory files
@@ -294,6 +294,8 @@ sub which_Options {
 	$hmm_profiles	= "$FGMP/data/hmm_profiles/AllOneR.hmm" if (!(defined($hmm_profiles)));
 	$hmm_prefix	= "OMA" if (!(defined($hmm_prefix)));
 	$cutoff_file	= "$FGMP/data/profiles_cutOff.tbl" if (!(defined($cutoff_file)));
+	$mark_file	= "$FGMP/data/245Markers.txt" if (!(defined($mark_file))); 
+	$tag		= "OMA" if (!(defined($tag)));
 	$verbose_str	= " -v " if $verbose_flg;
 	$threads	= 4 if (!(defined($threads)));
 	$augTraingCutoff = 50 if (!(defined($augTraingCutoff)));
@@ -358,6 +360,10 @@ COMMAND-LINE OPTIONS
 	-d, --blastdb		blast database for the genome sequence
 
 	-c, --cutoff_file	profiles cutoff file
+
+	-m, --mark_file		completeness markers
+
+	-t, --tag		tag to use OMA for fgmp, FUNY (Funybase) or CEG (cegma)
 
 	-T, --threads		Specify the number of processor threads to use
 

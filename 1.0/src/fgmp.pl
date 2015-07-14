@@ -303,12 +303,13 @@ sub which_Options {
 	
 
 	# default settings
-	$protein	= "$FGMP/data/OneRep.fa" if (!(defined($protein)));
+#	$protein	= "$FGMP/data/OneRep.fa" if (!(defined($protein)));
+	$protein        = "$FGMP/data/788_from_815_cutof_0.99_markers.crossMatch_removed.fa" if (!(defined($protein)));
 	$output 	= "output" if (!(defined($output))); 
 	$hmm_profiles	= "$FGMP/data/hmm_profiles/AllOneR.hmm" if (!(defined($hmm_profiles)));
 	$hmm_prefix	= "OMA" if (!(defined($hmm_prefix)));
 	$cutoff_file	= "$FGMP/data/profiles_cutOff.tbl" if (!(defined($cutoff_file)));
-	$mark_file	= "$FGMP/data/815_cutof_0.99_markers.txt" if (!(defined($mark_file))); 
+	$mark_file	= "$FGMP/data/788_from_815_cutof_0.99_markers.crossMatch_removed.txt" if (!(defined($mark_file))); 
 	$tag		= "OMA" if (!(defined($tag)));
 	$verbose_str	= " -v " if $verbose_flg;
 	$threads	= 4 if (!(defined($threads)));

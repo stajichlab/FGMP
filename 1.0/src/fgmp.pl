@@ -58,7 +58,7 @@ my($genome,$protein,$output,$blastdb,$hmm_profiles,$hmm_prefix,$cutoff_file,$mar
 # 	CHECKS
 # ----------------------------------- #
 # check if the softs are installed - TODO: catch nicely the die message
-foreach my $soft ( qw ( makeblastdb tblastn exonerate hmmsearch blastall)){
+foreach my $soft ( qw ( makeblastdb tblastn exonerate hmmsearch sixpack csplit )){
 	my $full_path = can_run($soft) || croak "$soft is not installed\n";	
 }
 
@@ -75,6 +75,13 @@ unless (-e "$genome.candidates.fa"){
 	&run_find_candidate_regions("$WRKDIR/$genome",$protein,$threads);
 }
 
+# Implements sixpack to translate from candidate regions, because exonerate miss some regions
+if (defined ($threads) && ($threads >= 2)){
+	Fgmp::split_and_run_sixpack("$genome.candidates.fa");
+
+	# should produce $genome.candidates.fa.orfs
+}
+
 # ----------------------------------- #
 # REFINING MAPPING ON SELECTED REGIONS
 # ----------------------------------- #
@@ -84,7 +91,7 @@ unless (-e "$genome.candidates.fa"){
 unless (-e "$genome.candidates.fa.p2g"){
 	# chunk the candate regions and runn exonerate in parallel # for speed
 
-	if (defined ($threads) && ($threads > 2)){
+	if (defined ($threads) && ($threads >= 2)){
  		my ($nb_seqs,$nb_chunk,$nb_seq_per_chunk,$fastaJobs,$exonerateJobs) = Fgmp::multithread_exonerate("$genome.candidates.fa","$threads","$protein","$FGMP/src",$WRKDIR);
 	
 		&report("CMD:LAUNCHING MULTI-THREAD EXONERATE\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqs\n\tNB OF CHUNKs: $nb_chunk\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunk");
@@ -142,7 +149,7 @@ Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/gff2gbSmallDNA.pl $WRKDIR/$gen
 my $numOfGenesIngb = Fgmp::how_many_locus("$genome.trainingSet.gb");
 
 if ($numOfGenesIngb >= $augTraingCutoff){
-	Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/randomSplit.pl $genome.trainingSet.gb $augTraingCutoff");
+		Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/randomSplit.pl $genome.trainingSet.gb $augTraingCutoff");
 	
 	# check if this dir already exists then erase if there
 	Fgmp::execute("rm -rf $FGMP/utils/augustus-3.0.3/config/species/$genome") if (-e "$FGMP/utils/augustus-3.0.3/config/species/$genome"); 
@@ -152,11 +159,12 @@ if ($numOfGenesIngb >= $augTraingCutoff){
 	Fgmp::execute("$FGMP/utils/augustus-3.0.3/src/etraining --species=$genome $genome.trainingSet.gb.train --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
 	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome $genome.trainingSet.gb.test --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config | tee firsttest.$genome");
 
-	my ($nb_seqsAug,$nb_chunkAug,$nb_seq_per_chunkAug,$augustusJobs,$gff2aaJobs,$concatElements) = Fgmp::multithread_augustus("$genome.candidates.fa","$threads","$protein","$FGMP/src","$FGMP/utils/augustus-3.0.3",$WRKDIR,$genome);
+	 if (defined ($threads) && ($threads >= 2)){
+		my ($nb_seqsAug,$nb_chunkAug,$nb_seq_per_chunkAug,$augustusJobs,$gff2aaJobs,$concatElements) = Fgmp::multithread_augustus("$genome.candidates.fa","$threads","$protein","$FGMP/src","$FGMP/utils/augustus-3.0.3",$WRKDIR,$genome);
 
-	&report("CMD:LAUNCHING MULTI-THREAD AUGUSTURS\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqsAug\n\tNB OF CHUNKs: $nb_chunkAug\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunkAug");
+		&report("CMD:LAUNCHING MULTI-THREAD AUGUSTURS\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqsAug\n\tNB OF CHUNKs: $nb_chunkAug\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunkAug");
 
- 	my $status_aug = Fgmp::execute_and_returnWhendone(@$augustusJobs);
+ 		my $status_aug = Fgmp::execute_and_returnWhendone(@$augustusJobs);
 
                 # wait for fasta files to be created , $status_fas should be 0 if all runs complete
                 if ($status_aug == '0'){
@@ -176,6 +184,10 @@ if ($numOfGenesIngb >= $augTraingCutoff){
                 } else {
                         # do something : something went wrong with the fasta files
                 }
+	 } else {
+		Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config $WRKDIR/$genome.candidates.fa > $WRKDIR/$genome.candidates.fa.gff");
+		Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/getAnnoFasta.pl $WRKDIR/$genome.candidates.fa.gff");
+	}
 	
 } else {
 	warn"insufficient number of genes for augustus training :-(\n";
@@ -193,6 +205,7 @@ push (@clean, "$genome.trainingSet", "$genome.trainingSet.gb", "tee firsttest.$g
 	
 	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins > $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
 	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.aa >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.aa");
+	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.orfs >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.orfs");
 
  	Fgmp::execute("$FGMP/src/rename.pl $WRKDIR/$genome.unfiltered > $WRKDIR/$genome.unfiltered.renamed");	
 	my $countUn = Fgmp::count_num_of_seqs("$WRKDIR/$genome.unfiltered.renamed");	
@@ -242,14 +255,15 @@ sub run_find_candidate_regions {
 	# TODO : check that fasta header are properly formatted
 
 	# run BLAST+ (too slow)
-	#Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -parse_seqids -out $genome_file.db  > /dev/null 2>&1");
-	#Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 1 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastnOut");
+	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -parse_seqids -out $genome_file.db  > /dev/null 2>&1");
+	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 1 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
 	#Fgmp::execute("grep -v \'#\' $genome_file.tblastnOut | cut -f 1 | sort -u > $genome_file.candidates");
-	
+	my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn");	
+
 	# with blastall 
-	Fgmp::execute("formatdb -i $genome_file -p F");
-	Fgmp::execute("blastall -p tblastn -d $genome_file -i $prot  -v 5 -b 5 -a $cps -e 0.01 -m 8 -o $genome_file.tblastn");
-        my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn"); 
+	#Fgmp::execute("formatdb -i $genome_file -p F");
+	#Fgmp::execute("blastall -p tblastn -d $genome_file -i $prot  -v 5 -b 5 -a $cps -e 0.01 -m 8 -o $genome_file.tblastn");
+        #my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn"); 
 	
 	Fgmp::exportCandidateRegions(\%adjusted,$genome_file);
 
@@ -294,7 +308,7 @@ sub which_Options {
 	$hmm_profiles	= "$FGMP/data/hmm_profiles/AllOneR.hmm" if (!(defined($hmm_profiles)));
 	$hmm_prefix	= "OMA" if (!(defined($hmm_prefix)));
 	$cutoff_file	= "$FGMP/data/profiles_cutOff.tbl" if (!(defined($cutoff_file)));
-	$mark_file	= "$FGMP/data/245Markers.txt" if (!(defined($mark_file))); 
+	$mark_file	= "$FGMP/data/815_cutof_0.99_markers.txt" if (!(defined($mark_file))); 
 	$tag		= "OMA" if (!(defined($tag)));
 	$verbose_str	= " -v " if $verbose_flg;
 	$threads	= 4 if (!(defined($threads)));
@@ -333,6 +347,7 @@ REQUIRES
 	- Exonerate
 	- BioPerl xxx
 	- IO::All
+	- Emboss sixpack & csplit
 
 
 ENVIRONMENT VARIABLES

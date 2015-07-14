@@ -59,6 +59,24 @@ sub clean_files {
 		execute("rm -rf $directory/$tag-temporyfiles"); 
 	}
 }
+sub split_and_run_sixpack {
+	my ($multifasta) = @_; 
+
+	execute("csplit -s -f chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
+	execute("rm -rf sixpack_tmp") if (-d "sixpack_tmp");
+	execute("mkdir sixpack_tmp"); 
+	execute("mv chunk_6p\* sixpack_tmp");
+	my $io = io('sixpack_tmp');
+	my @contents = $io->all; 
+	
+	my $chk = "";
+	foreach $chk ( @contents) {
+		execute("sixpack -sequence $chk -outfile $chk.sixpack -outseq $chk.orfs -orfminsize 50");
+	}
+
+	# concatenate
+	execute("cat sixpack_tmp/\*.orfs > $multifasta.orfs");
+}
 
 sub multithread_exonerate {
 	my ($candidateFasta, $cpuAvail, $proteins, $srcdir,$outdir) = @_;
@@ -252,8 +270,9 @@ sub extractCandidateRegion {
 	   $tb->autoclose(0); 
 	   while( my $tbline = $tb->getline || $tb->getline){
 	   chomp $tbline; 
+		next if $tbline =~ m/^#/;
 		my @datatb = split /\t/, $tbline; 
-		my ($target,$sstart,$send) = ($datatb[1],$datatb[8],$datatb[9]); 
+		my ($target,$sstart,$send) = ($datatb[0],$datatb[1],$datatb[2]); 
 		
 		if ($sstart > $send) { # reverse
 			my $rsstart = $send;

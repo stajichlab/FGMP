@@ -29,11 +29,12 @@ options
 " unless (@ARGV > 2); 
 
 my $completeCutoff  = '0.7';
+
 GetOptions(
-	    "cutoff=f" => \$completeCutoff
+	    "cutoff=f" => \$completeCutoff 
 );
 
-my ($hmmsearchOut,$cutoff,$consMarkers) = @ARGV; 
+my ($hmmsearchOut,$cutoff,$consMarkers,$tag) = @ARGV; 
 
 # ---------------------------------------------- #
 #
@@ -68,6 +69,8 @@ my ($hmmcutoff,$hmmAlgnlen,$hmmRatio) = parseCutoffData($cutoff);
 my %hmmcutoff = %$hmmcutoff;
 my %hmmAlgnlen = %$hmmAlgnlen;
 my %hmmRatio = %$hmmRatio;
+
+#say Dumper $hmmAlgnlen;
 
 # load the name of 245 markers
 &report("...LOADING 245 markers data"); 
@@ -109,7 +112,7 @@ foreach $model (keys %hmmName){
 		unless ($seq2scorel{$cand} eq 'NOT FOUND') { # skip those models without hits
 			
 			# check that the best seq pass the filtering cuoff
-			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.2)){ # 0.4 is an empirically determined value (seems to work best for Anid and Ncra
+			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.4)){ # 0.4 is an empirically determined value (seems to work best for Anid and Ncra
 		
         
 			# I catch model with significnat hits in the preds
@@ -164,16 +167,21 @@ foreach $el (keys %seq2model){
 # ---------------------------------------------- #
 &report("...TRACKING ABBERANT PROTEINS");
 
+#say Dumper $hmmAlgnlen;
+
 # key = seq xxx = value = AB|NORM
 my ($abberantProteins,$countAbb) = isAbberrant(\%seqLen,\%hmmAlgnlen,\%seq2model); 
 my %abberantProteins = %$abberantProteins;
 
+#say Dumper \%seqLen;
+#say Dumper \%hmmAlgnlen;
+
 # ---------------------------------------------- #
 # check that protein cover at least 70% of the 
 # alignment (i.e. the original untrimmed aligment
-# used to built the profil)
+# used to build the profile)
 # ---------------------------------------------- #
- &report("...COMPLETION SUTFF");
+ &report("COMPLETENESS ESTIMATION");
 my %goodPreds = (); 
 my $complete = 0; 
 my $partial = 0;
@@ -183,9 +191,6 @@ my ($v) = "";
 my $count = 1;
 
 my $total = scalar (keys %seq2model);
-
-# my cutoffs
-#my $completeCutoff = '0.7'; 
 
 # at this stage of the model present in this hash have a sequence that has passed the score filter
 # only the best sequence per model should arrive here
@@ -202,19 +207,16 @@ foreach $v (keys %seq2model){
 		$complete++;
 		# say "$threshold is", looks_like_number($threshold) ? '': ' not', " a number";
 
-		# check if that is one of the 245 fgmp
+		# check if that is one of the completeness markers
 		if ($significantmodel{$seq2model{$v}}){
-			$logfull .="$v\t$seq2model{$v}\tCOMPLETE\tFGMP\t$abberantProteins{$v}\t$hmmRatio{$seq2model{$v}}\n";
-#			$fgmpMarkers++;
+			$logfull .="$v\t$seq2model{$v}\tCOMPLETE\tCOMPL_MARK\t$abberantProteins{$v}\t$hmmRatio{$seq2model{$v}}\n";
 		} else {
 		 	 $logfull .="$v\t$seq2model{$v}\tCOMPLETE\tXXXX\t$abberantProteins{$v}\t$hmmRatio{$seq2model{$v}}\n";
-
 		}
 		
 	} elsif ($seq2alnLen{$v} <  $threshold){
 		if ($significantmodel{$seq2model{$v}}){
-			$logfull .="$v\t$seq2model{$v}\tPARTIAL\tFGMP\t$abberantProteins{$v}\t$hmmRatio{$seq2model{$v}}\n";
-#			$fgmpMarkers++;
+			$logfull .="$v\t$seq2model{$v}\tPARTIAL\tCOMPL_MARK\t$abberantProteins{$v}\t$hmmRatio{$seq2model{$v}}\n";
 		    } else {
 			$logfull .="$v\t$seq2model{$v}\tPARTIAL\tXXXX\t$abberantProteins{$v}\t$hmmRatio{$seq2model{$v}}\n";
 		}
@@ -227,7 +229,6 @@ foreach $v (keys %seq2model){
 }
 
 &report("DONE!");
-
 &report("PRINTING FULL REPORT");
 io("$hmmsearchOut.full_report")->write($logfull);
 
@@ -237,7 +238,6 @@ my $totalSeq  = keys %seq2model;
 my $totalFgmp = scalar (keys %markers);
 my $completness = sprintf("%.1f",(($fgmpMarkers / $totalFgmp) * 100));
 my $missingFGMPmarkers = scalar %missingFGMPmarkers;
-
 
 # printing report 
 	my $logsum .= "| ---------------------------------------------------------- |\n";
@@ -262,8 +262,8 @@ my $missingFGMPmarkers = scalar %missingFGMPmarkers;
 	   $logsum .= "| ---------------------------------------------------------- |\n\n";
 	   $logsum .= "| These results are based on the set of genes selected by OHC & JES #\n\n";
 	   $logsum .= "| Key:\n";
-	   $logsum .= "| Prots completeness = 245 conserved fungal genes\n";
-	   $logsum .= "| \%compleness = percent of 245 FCGs in the dataset\n";
+	   $logsum .= "| Prots completeness = 788 conserved fungal genes\n";
+	   $logsum .= "| \%compleness = percent of 788 FCGs in the dataset\n";
 	   $logsum .= "|---------------------------------------------------------- |\n";
 	  
 	 io("$hmmsearchOut.summary_report")->write($logsum);
@@ -296,6 +296,9 @@ sub isAbberrant{
         my %seqslen = %$seqlen;
 	my %hmmlen = %$hmmlen; 
 	my %seq2mod = %$seq2mod;
+	
+	#say "XXXX";
+	#say Dumper $hmmlen; 
 
 	my $abcount = 0;
 	my %abb = (); 
@@ -308,7 +311,7 @@ sub isAbberrant{
 	my $empty = "";
  
 	foreach my $id (keys %seq2mod){
-		if ($seqslen{$id} > ($hmmlen{$seq2mod{$id}} x 2)){
+		if ($seqslen{$id} > ($hmmlen{$seq2mod{$id}} * 2)){
 				$abb{$id} = 'ABERRANT';
 				$abcount++;
 			} else {
@@ -328,7 +331,8 @@ sub extractSeqLenAndmodelNames {
 	   while (my $inL = $inH->getline || $inH->getline){
 	   chomp $inL; 	
 			next if $inL =~ m/^#/; 	
-			my ($id,$len,$modelName) = $inL =~/(Seq_\d+)\s+\-\s+(\d+)\s+(OMA\d+)/;
+			my @dataL = split /\s+/, $inL;
+			my ($id,$len,$modelName) = ($dataL[0],$dataL[2],$dataL[3]);		
 			$h4{$id} = $len;
 			$h5{$modelName} = 'x';	   			   
 	   }

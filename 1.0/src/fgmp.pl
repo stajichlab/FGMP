@@ -75,11 +75,18 @@ unless (-e "$genome.candidates.fa"){
 	&run_find_candidate_regions("$WRKDIR/$genome",$protein,$threads);
 }
 
+# test to confirm that the problem come from the candidate section -  before I fix the probleme of "candidate regions
+Fgmp::execute("cp $genome $genome.candidates.fa");
+
 # Implements sixpack to translate from candidate regions, because exonerate miss some regions
 if (defined ($threads) && ($threads >= 2)){
 	Fgmp::split_and_run_sixpack("$genome.candidates.fa");
 
 	# should produce $genome.candidates.fa.orfs
+	
+	# test transeq
+	#Fgmp::transeq("$genome.candidates.fa");
+
 }
 
 # ----------------------------------- #
@@ -205,8 +212,11 @@ push (@clean, "$genome.trainingSet", "$genome.trainingSet.gb", "tee firsttest.$g
 	
 	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins > $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
 	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.aa >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.aa");
-	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.orfs >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.orfs");
-
+	#Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.orfs >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.orfs");
+	
+	# test transeq
+	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.translated >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.translated");
+	
  	Fgmp::execute("$FGMP/src/rename.pl $WRKDIR/$genome.unfiltered > $WRKDIR/$genome.unfiltered.renamed");	
 	my $countUn = Fgmp::count_num_of_seqs("$WRKDIR/$genome.unfiltered.renamed");	
 	warn"No. of unfiltered predictions\t$countUn\n";
@@ -255,8 +265,10 @@ sub run_find_candidate_regions {
 	# TODO : check that fasta header are properly formatted
 
 	# run BLAST+ (too slow)
-	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -parse_seqids -out $genome_file.db  > /dev/null 2>&1");
-	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 1 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
+#	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -parse_seqids -out $genome_file.db  > /dev/null 2>&1"); # the -parse_seqids makes the program with names with space
+	 Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -out $genome_file.db  > /dev/null 2>&1");
+	 
+ 	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 5 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
 	#Fgmp::execute("grep -v \'#\' $genome_file.tblastnOut | cut -f 1 | sort -u > $genome_file.candidates");
 	my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn");	
 

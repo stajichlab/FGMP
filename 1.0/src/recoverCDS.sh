@@ -3,7 +3,7 @@
 cat $1  | perl -ne '
 if (/Target range:/){
         <>;<>;
-        while ($_ !~ /^OMA/){
+        while ($_ !~ /^XXX/){
         <>;
         chomp($target_aa .= <>);
         chomp($target_na .= <>);

@@ -73,7 +73,7 @@ my %hmmRatio = %$hmmRatio;
 #say Dumper $hmmAlgnlen;
 
 # load the name of 245 markers
-&report("...LOADING 245 markers data"); 
+&report("...LOADING markers data"); 
 
 my %markers = load("$consMarkers");  
 
@@ -112,7 +112,7 @@ foreach $model (keys %hmmName){
 		unless ($seq2scorel{$cand} eq 'NOT FOUND') { # skip those models without hits
 			
 			# check that the best seq pass the filtering cuoff
-			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.4)){ # 0.4 is an empirically determined value (seems to work best for Anid and Ncra
+			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.3)){ # 0.4 is an empirically determined value (seems to work best for Anid and Ncra
 		
         
 			# I catch model with significnat hits in the preds

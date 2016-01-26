@@ -62,11 +62,11 @@ sub clean_files {
 sub split_and_run_sixpack {
 	my ($multifasta) = @_; 
 
-	execute("csplit -s -f chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
-	execute("rm -rf sixpack_tmp") if (-d "sixpack_tmp");
-	execute("mkdir sixpack_tmp"); 
-	execute("mv chunk_6p\* sixpack_tmp");
-	my $io = io('sixpack_tmp');
+	execute("csplit -s -f $multifasta.chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
+	execute("rm -rf $multifasta.sixpack_tmp") if (-d "$multifasta.sixpack_tmp");
+	execute("mkdir $multifasta.sixpack_tmp"); 
+	execute("mv $multifasta.chunk_6p\* $multifasta.sixpack_tmp");
+	my $io = io("$multifasta.sixpack_tmp");
 	my @contents = $io->all; 
 	
 	my $chk = "";
@@ -75,9 +75,16 @@ sub split_and_run_sixpack {
 	}
 
 	# concatenate
-	execute("cat sixpack_tmp/\*.orfs > $multifasta.orfs");
+	execute("cat $multifasta.sixpack_tmp/\*.orfs > $multifasta.orfs");
 }
 
+sub transeq {
+	 my ($multifasta1) = @_;
+	
+	execute("transeq -clean -frame 6 -trim -sequence $multifasta1 -outseq $multifasta1.translated"); 
+
+
+}
 sub multithread_exonerate {
 	my ($candidateFasta, $cpuAvail, $proteins, $srcdir,$outdir) = @_;
 

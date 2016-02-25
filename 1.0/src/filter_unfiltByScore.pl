@@ -18,10 +18,8 @@ die "
 # protein ( one per line)
 
 
-filter_unfiltByScore.pl < hmmseach > < profiles_cutoff.tbl > < 245 FGMP> > file
+filter_unfiltByScore.pl < hmmseach > < profiles_cutoff.tbl > < 593 FGMP> < TAG > < nhmmer output > < UCEs prefix >> file
 
-example: 
-perl filter_unfiltByScore.pl test.2.hmmseach profiles_cutoff.tbl 245Markers.txt --cutoff 0.7
 
 options
 -v		verbose 
@@ -34,7 +32,7 @@ GetOptions(
 	    "cutoff=f" => \$completeCutoff 
 );
 
-my ($hmmsearchOut,$cutoff,$consMarkers,$tag) = @ARGV; 
+my ($hmmsearchOut,$cutoff,$consMarkers,$tag,$nhmmerOut,$fucesNames,$reads) = @ARGV; 
 
 # ---------------------------------------------- #
 #
@@ -56,11 +54,29 @@ if (!(-e"$consMarkers")){
 	exit(1);
 }
 
+if (!(-e "$nhmmerOut")){
+	warn"File does not exist: $nhmmerOut\n";
+	exit(1);	
+}
+
+if (!("$fucesNames")){
+	warn"Cannot find fUCEs names:$fucesNames\n";
+	exit(1);
+}
+
+# ---------------------------------------------- #
+# parse nhmmer data
+# ---------------------------------------------- #
+# return how many fUCEs are found in the genome
+my ($fucesFound,$fucesMissing) = parse_nhmerData($nhmmerOut,$fucesNames);
+
+my %fucesFound = %$fucesFound;
+my %fucesMissing = %$fucesMissing;
+
 # ---------------------------------------------- #
 # parse cutoff file and record model score cutoff 
 # and length
 # ---------------------------------------------- #
-
 # record hmm score and the length of the original
 # untrimmed alignment
 &report("...LOADING PROFILES DATA");
@@ -238,9 +254,21 @@ my $totalSeq  = keys %seq2model;
 my $totalFgmp = scalar (keys %markers);
 my $completness = sprintf("%.1f",(($fgmpMarkers / $totalFgmp) * 100));
 my $missingFGMPmarkers = scalar %missingFGMPmarkers;
+my $ucesFound = scalar(keys %fucesFound);
+my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / 172) * 100));
 
 # printing report 
 	my $logsum .= "| ---------------------------------------------------------- |\n";
+	   $logsum .= "|\tfUCEs report\n";
+	   $logsum .= "| ---------------------------------------------------------- |\n"; 
+	   $logsum .= "|\tNUM OF UCEs found:\t$ucesFound out of 172\n";
+	   $logsum .= "|\tUCEs completion estimation:\t($ucesFoundPercent\%)\n"; 
+ 	   
+	   foreach my $misfucs (keys %fucesMissing){
+                        $logsum .="|\t$misfucs\n";
+           }
+	  
+	   $logsum .= "| ---------------------------------------------------------- |\n";
 	   $logsum .= "|\tSUMMARY STATISTICS\n";
            $logsum .= "| ---------------------------------------------------------- |\n";
 	   $logsum .= "|\tTOTAL NUM OF PREDS ANALYZED:\t$totalUnfilteredPreds\n";
@@ -259,11 +287,16 @@ my $missingFGMPmarkers = scalar %missingFGMPmarkers;
 	   foreach my $mis (keys %missingFGMPmarkers){
 			$logsum .="|\t$mis\n";
 	   }    
+
+	   $logsum .= "| ---------------------------------------------------------- |\n";
+           $logsum .= "|\tSUMMARY OF READS ANALYSIS\n";
+           $logsum .= "| ---------------------------------------------------------- |\n";
+	   $logsum .= "|\tNumber of reads found in reads:\t$reads\n";
 	   $logsum .= "| ---------------------------------------------------------- |\n\n";
 	   $logsum .= "| These results are based on the set of genes selected by OHC & JES #\n\n";
 	   $logsum .= "| Key:\n";
-	   $logsum .= "| Prots completeness = 788 conserved fungal genes\n";
-	   $logsum .= "| \%compleness = percent of 788 FCGs in the dataset\n";
+	   $logsum .= "| Prots completeness = 593 conserved fungal genes\n";
+	   $logsum .= "| \%compleness = percent of 593 FCGs in the dataset\n";
 	   $logsum .= "|---------------------------------------------------------- |\n";
 	  
 	 io("$hmmsearchOut.summary_report")->write($logsum);
@@ -406,4 +439,43 @@ sub parseCutoffData{
 sub report {
 	my ($log) = @_;
 	warn"--- LOG:\t$log\n";
+}
+sub parse_nhmerData {
+	my ($report,$names) = @_;
+
+
+	my (%found,%missing) = ((),());
+	
+	# read all names
+	my %all = ();
+	my $n = io($names);
+	   $n->autoclose(0);
+	   while ( my $nl = $n->getline || $n->getline ) {
+	   chomp $nl;
+		$all{$nl} = $nl;
+	}
+	
+	#
+
+	my %detected = ();
+	my $nh = io($report);
+	   $nh->autoclose(0);
+	   while ( my $nhl = $nh->getline || $nh->getline ) {
+	   chomp $nhl; 
+		next if $nhl =~ m/^#/; 
+			my ($g) = $nhl =~/\s+(G\.\d+)\s+/;
+			$detected{$g} = 'x';	
+	} 
+	# soustract
+	my $i = "";
+	
+	foreach $i ( keys %all ) {
+		if ($detected{$i}){
+			$found{$i} = $i;
+		} else {
+			$missing{$i} = $i;
+		}
+
+	}	
+	return(\%found,\%missing);	
 }

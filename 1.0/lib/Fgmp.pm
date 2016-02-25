@@ -313,20 +313,20 @@ sub extractCandidateRegion {
 		my $startBoundaries = "";
 		
 		# meaning that 5000 (5kb) extends the end of the contig
-		if (min(@{$h1{$el}}) < 5000){
+		if (min(@{$h1{$el}}) < 5000000){
 			$startBoundaries = 0;
 		} else {
-			$startBoundaries = (min(@{$h1{$el}}) - 5000);
+			$startBoundaries = (min(@{$h1{$el}}) - 5000000);
 		}
 		
 		# you might need the size of the contig
-		my $endBoundaries = (max(@{$h1{$el}}) + 5000);
+		my $endBoundaries = (max(@{$h1{$el}}) + 5000000);
 
 		# populating the hash
 		push(@bounds,$startBoundaries,$endBoundaries);		 
 		@{$boundaries{$el}} = @bounds;
 
-		# clean @bounds 
+		# cleaning @bounds 
 		@bounds = ();
 	} 
 	return (%boundaries);
@@ -357,6 +357,149 @@ sub exportCandidateRegions {
 sub run_on_single_node {
 	my ($genomeFas,$protFas,$direct) = @_; 
 	execute("exonerate --model protein2genome --percent 5 -q $protFas --showtargetgff Y -t $direct/$genomeFas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $direct/$genomeFas.p2g"); 
+}
+sub search_in_reads {
+	my ($reads,$protein,$fgmpdir,$threads) = @_;
+
+	my @markers = load($protein);	
+	
+	my $ids = `grep \'^>\' $reads`;
+	   $ids =~s/\n//g;
+	   
+	my @ids = split />/,$ids;
+	my $num_seqs = scalar @ids;
+
+	my %samples = reservoir_sampling(@ids);
+	
+	my %markersFound = ();
+	my $it = "";
+	my $trials = 0;
+
+	foreach $it ( keys %samples) {
+        	my @sample = @{$samples{$it}};
+        	generateFasta(\@sample,$it,$reads,\@ids,$fgmpdir);  # generate for blast $it.fa
+        	
+		my %makers = runBlastx("$reads.sampled.$it.fa",$protein,$threads);
+
+        my %new = compare(\%makers, \%markersFound);
+
+        my $new = scalar (keys %new);
+        my $previous = scalar (keys %markersFound);
+
+        if ($new < ($previous * 0.1)){
+                $trials++;
+                warn"...cut off not meet - # warnings\n";
+        } else {
+                warn"...new markers found:\t$new ( previous $previous)";
+        }
+        # update %markerFound
+        # becareful will erase previous data but
+        	my $t = "";
+		foreach $t ( %makers ) {
+                	$markersFound{$t} = $makers{$t}
+        		}
+        	last if ($trials == 20);
+	}
+	my $founds = scalar (keys %markersFound);
+	return($founds);
+}
+
+sub compare {
+        my ($h1,$h2) = @_;
+
+        my %h1 = %$h1;
+        my %h2 = %$h2;
+        my %new = ();
+        my ($m1,$m2) = ("","");
+        foreach $m1 ( keys %h1 ) {
+                unless ( $h2{$m1} ) {
+                        $new{$m1} = $h1{$m1};
+                }
+        }
+        return(%new);
+}
+
+sub runBlastx {
+        my ($query,$target,$threads) = @_;
+         execute("~/ocisse/utils/oldBlastall/blast-2.2.11/bin/blastall -p blastx -d $target -i $query -e 1e-5 -v 1 -b 1 -a $threads -m 8 -o $query.blastx ");
+         my %founds = extractMarkers("$query.blastx");
+        return(%founds);
+}
+sub extractMarkers {
+        my %h = ();
+        my $blastx = io(@_);
+           $blastx->autoclose(0);
+           while ( my $bl = $blastx->getline || $blastx->getline ) {
+           chomp $bl;
+                my @dat = split /\t/,$bl;
+                my ($q,$s,$eval) = ($dat[0],$dat[1],$dat[10]);
+
+                if ($h{$dat[1]}) {
+                        my @tmp = @{$h{$dat[1]}};
+                        unless ($eval > $tmp[1]){
+                                @{$h{$dat[1]}} = ($q,$eval);
+                        }
+
+                } else {
+                        @{$h{$s}} = ($q,$eval);
+                }
+        }
+        return(%h);
+}
+sub generateFasta {
+        my ($list,$iteration,$readsFile,$ids,$dir) = @_;
+
+        my @ids = @$ids;
+
+        my $buffer = "";
+        my $id = "";
+        foreach $id ( @$list ) {
+                $buffer .="$ids[$id]\n";
+        }
+        io("$iteration.tmp")->write($buffer);
+        execute("perl $dir/src/retrieveFasta.pl $iteration.tmp $readsFile > $readsFile.sampled.$iteration.fa");
+        execute("rm $iteration.tmp");
+}
+sub reservoir_sampling {
+        my (@list) = @_;
+        
+	my %samples = ();
+
+        my $num_of_samples = '1000';
+        my $sample_size = '1000';
+        my $counter = 1;
+	my $num_seqs = scalar (@list);
+
+        while ( $counter < ($num_of_samples + 1)){
+         my @sampled = (1 .. $sample_size);
+         for my $j ( $sample_size + 1 .. $num_seqs) {
+                 $sampled[ rand(@sampled) ] = $j if rand() <= ($sample_size / $j)
+                }
+
+        my $tmp = "";
+        my @buf = ();
+        foreach $tmp ( @sampled ) {
+                push(@buf, $tmp);
+        }
+
+        @{$samples{"s.$counter"}} = @buf;
+        $counter++;
+        }
+        return(%samples);
+}
+
+sub load {
+        my @array = ();
+        my $f = io(@_);
+          $f->autoclose(0);
+          while ( my $fl = $f->getline || $f->getline){
+          chomp $fl;
+                if ( $fl =~ m/^>/){
+                        $fl =~s/>//;
+                        push(@array, $fl);
+                }
+        }
+        return(@array);
 }
 1;
 

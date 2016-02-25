@@ -49,7 +49,7 @@ if (-e 'fgmp.config'){
 &show_help unless @ARGV; 
 
 # getOptions variables
-my($genome,$protein,$output,$blastdb,$hmm_profiles,$hmm_prefix,$cutoff_file,$mark_file,$tag,$verbose_str,$verbose_flg,$quiet_flg,$temp_flg,$help_flg,$threads,$augTraingCutoff) = (undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,0,0,0,0,4,50);
+my($genome,$protein,$output,$blastdb,$hmm_profiles,$hmm_prefix,$cutoff_file,$mark_file,$fuces_hmm,$fuces_prefix,$tag,$reads,$verbose_str,$verbose_flg,$quiet_flg,$temp_flg,$help_flg,$threads,$augTraingCutoff) = (undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,undef,0,0,0,0,4,50);
 
 # Reading options
 &which_Options(); 
@@ -76,7 +76,7 @@ unless (-e "$genome.candidates.fa"){
 }
 
 # test to confirm that the problem come from the candidate section -  before I fix the probleme of "candidate regions
-Fgmp::execute("cp $genome $genome.candidates.fa");
+#Fgmp::execute("cp $genome $genome.candidates.fa");
 
 # Implements sixpack to translate from candidate regions, because exonerate miss some regions
 if (defined ($threads) && ($threads >= 2)){
@@ -146,7 +146,7 @@ if (($fileSize > '373') && (-e "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa"
 push (@clean, "$WRKDIR/$genome.candidates.fa", "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g", "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa", "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
  
 # ----------------------------------- #
-# AB INITION PREDS
+## abinitio predictions
 # ----------------------------------- #
 &report("INFO\tAB INITIO PREDS");
 
@@ -163,16 +163,16 @@ if ($numOfGenesIngb >= $augTraingCutoff){
 	Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/new_species.pl --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
 
 	# training
-	Fgmp::execute("$FGMP/utils/augustus-3.0.3/src/etraining --species=$genome $genome.trainingSet.gb.train --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
-	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome $genome.trainingSet.gb.test --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config | tee firsttest.$genome");
+#	Fgmp::execute("$FGMP/utils/augustus-3.0.3/src/etraining --species=$genome $genome.trainingSet.gb.train --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
+#	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome $genome.trainingSet.gb.test --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config | tee firsttest.$genome");
 
 	 if (defined ($threads) && ($threads >= 2)){
 		my ($nb_seqsAug,$nb_chunkAug,$nb_seq_per_chunkAug,$augustusJobs,$gff2aaJobs,$concatElements) = Fgmp::multithread_augustus("$genome.candidates.fa","$threads","$protein","$FGMP/src","$FGMP/utils/augustus-3.0.3",$WRKDIR,$genome);
 
 		&report("CMD:LAUNCHING MULTI-THREAD AUGUSTURS\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqsAug\n\tNB OF CHUNKs: $nb_chunkAug\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunkAug");
 
- 		my $status_aug = Fgmp::execute_and_returnWhendone(@$augustusJobs);
-
+ 	#	my $status_aug = Fgmp::execute_and_returnWhendone(@$augustusJobs);
+		my $status_aug = 0; # TO REMOVE ######## ________ ###########
                 # wait for fasta files to be created , $status_fas should be 0 if all runs complete
                 if ($status_aug == '0'){
 				my $statuts_gff2aa = Fgmp::execute_and_returnWhendone(@$gff2aaJobs);
@@ -192,8 +192,8 @@ if ($numOfGenesIngb >= $augTraingCutoff){
                         # do something : something went wrong with the fasta files
                 }
 	 } else {
-		Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config $WRKDIR/$genome.candidates.fa > $WRKDIR/$genome.candidates.fa.gff");
-		Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/getAnnoFasta.pl $WRKDIR/$genome.candidates.fa.gff");
+	#	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config $WRKDIR/$genome.candidates.fa > $WRKDIR/$genome.candidates.fa.gff");
+	#	Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/getAnnoFasta.pl $WRKDIR/$genome.candidates.fa.gff");
 	}
 	
 } else {
@@ -232,7 +232,16 @@ if (-s "$genome.preds.filtered"){
 	my $countFil = Fgmp::count_num_of_seqs("$genome.unfiltered.renamed");
 	warn "A filtered file already exists $genome.preds.filtered and contains $countFil\n";
 	} else {
-		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
+		# protein makers
+#		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
+
+		# fUCEs
+#		Fgmp::execute("nhmmer -E 1e-5 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
+		
+		# search in reads
+		if (defined($reads)){
+			my $makersFoundInReads = Fgmp::search_in_reads($reads,$protein,$FGMP,$threads);
+		}	
 
 	# need to clean before
 
@@ -240,13 +249,17 @@ if (-s "$genome.preds.filtered"){
 #	Fgmp::execute("perl -pi.old -E 's/.aln.trim//' $genome.unfiltered.renamed.hmmsearch");
 
 	# filtering	
-	Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $mark_file --cutoff 0.7"); 
+	Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $mark_file $tag $WRKDIR/$genome.nhmmer.out $fuces_prefix $makersFoundInReads --cutoff 0.7"); 
 	
 	# extract fasta
 	Fgmp::execute("grep \'\^Seq\' $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report | cut -f 1 > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp");
 	Fgmp::execute("$FGMP/src/retrieveFasta.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.bestPreds.fas");
 }
 push(@clean,"$genome.unfiltered.renamed","$genome.unfiltered.renamed.hmmsearch","$genome.unfiltered.renamed.hmmsearch.log","$genome.unfiltered.renamed.hmmsearch.full_report.tmp","$genome.db.nhr","$genome.db.nin");
+
+
+
+
 
 # ----------------------------------- #
 # CLEANING
@@ -266,9 +279,9 @@ sub run_find_candidate_regions {
 
 	# run BLAST+ (too slow)
 #	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -parse_seqids -out $genome_file.db  > /dev/null 2>&1"); # the -parse_seqids makes the program with names with space
-	 Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -out $genome_file.db  > /dev/null 2>&1");
+   	 Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -out $genome_file.db  > /dev/null 2>&1");
 	 
- 	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 5 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
+    	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 5 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
 	#Fgmp::execute("grep -v \'#\' $genome_file.tblastnOut | cut -f 1 | sort -u > $genome_file.candidates");
 	my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn");	
 
@@ -294,6 +307,9 @@ sub which_Options {
 		"hmm_prefix=s"		=> \$hmm_prefix,
 		"c|cutoff_file=s"	=> \$cutoff_file,
 		"m|mark_file=s"		=> \$mark_file,
+		"fuces_hmm=s"		=> \$fuces_hmm, # fUCEs hmm
+		"fuces_prefix=s"	=> \$fuces_prefix, #fUCEs names
+		"r|reads=s"		=> \$reads, 
 		"t|tag=s"		=> \$tag,
 		"v|verbose"		=> \$verbose_flg,	# verbose
 		"q|quiet"		=> \$quiet_flg,	# quiet mode
@@ -316,12 +332,14 @@ sub which_Options {
 
 	# default settings
 #	$protein	= "$FGMP/data/OneRep.fa" if (!(defined($protein)));
-	$protein        = "$FGMP/data/788_from_815_cutof_0.99_markers.crossMatch_removed.fa" if (!(defined($protein)));
+	$protein        = "$FGMP/data/593_cleanMarkers.fa" if (!(defined($protein)));
 	$output 	= "output" if (!(defined($output))); 
-	$hmm_profiles	= "$FGMP/data/hmm_profiles/AllOneR.hmm" if (!(defined($hmm_profiles)));
+	$hmm_profiles	= "$FGMP/data/593_cleanMarkers.hmm" if (!(defined($hmm_profiles)));
 	$hmm_prefix	= "OMA" if (!(defined($hmm_prefix)));
 	$cutoff_file	= "$FGMP/data/profiles_cutOff.tbl" if (!(defined($cutoff_file)));
-	$mark_file	= "$FGMP/data/788_from_815_cutof_0.99_markers.crossMatch_removed.txt" if (!(defined($mark_file))); 
+	$mark_file	= "$FGMP/data/593_cleanMarkers.txt" if (!(defined($mark_file)));
+	$fuces_hmm	= "$FGMP/data/172_fUCEs.hmm" if (!(defined($fuces_hmm)));
+	$fuces_prefix   = "$FGMP/data/172_fUCEs.txt" if (!(defined($fuces_prefix))); 
 	$tag		= "OMA" if (!(defined($tag)));
 	$verbose_str	= " -v " if $verbose_flg;
 	$threads	= 4 if (!(defined($threads)));
@@ -390,6 +408,12 @@ COMMAND-LINE OPTIONS
 	-c, --cutoff_file	profiles cutoff file
 
 	-m, --mark_file		completeness markers
+
+	-r, --reads		reads
+
+	--fuces_hmm		fungal Ultra Conserved Elements (hmms)
+	
+	--fuces_prefix		 fungal Ultra Conserved Elements (names - one per line please!)
 
 	-t, --tag		tag to use OMA for fgmp, FUNY (Funybase) or CEG (cegma)
 

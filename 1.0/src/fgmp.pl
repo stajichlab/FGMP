@@ -82,11 +82,6 @@ unless (-e "$genome.candidates.fa"){
 if (defined ($threads) && ($threads >= 2)){
 	Fgmp::split_and_run_sixpack("$genome.candidates.fa");
 
-	# should produce $genome.candidates.fa.orfs
-	
-	# test transeq
-	#Fgmp::transeq("$genome.candidates.fa");
-
 }
 
 # ----------------------------------- #
@@ -163,17 +158,17 @@ if ($numOfGenesIngb >= $augTraingCutoff){
 	Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/new_species.pl --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
 
 	# training
-#	Fgmp::execute("$FGMP/utils/augustus-3.0.3/src/etraining --species=$genome $genome.trainingSet.gb.train --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
-#	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome $genome.trainingSet.gb.test --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config | tee firsttest.$genome");
+ 	Fgmp::execute("$FGMP/utils/augustus-3.0.3/src/etraining --species=$genome $genome.trainingSet.gb.train --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config > /dev/null 2>&1");
+ 	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome $genome.trainingSet.gb.test --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config | tee firsttest.$genome");
 
 	 if (defined ($threads) && ($threads >= 2)){
 		my ($nb_seqsAug,$nb_chunkAug,$nb_seq_per_chunkAug,$augustusJobs,$gff2aaJobs,$concatElements) = Fgmp::multithread_augustus("$genome.candidates.fa","$threads","$protein","$FGMP/src","$FGMP/utils/augustus-3.0.3",$WRKDIR,$genome);
 
 		&report("CMD:LAUNCHING MULTI-THREAD AUGUSTURS\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqsAug\n\tNB OF CHUNKs: $nb_chunkAug\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunkAug");
 
- 	#	my $status_aug = Fgmp::execute_and_returnWhendone(@$augustusJobs);
-		my $status_aug = 0; # TO REMOVE ######## ________ ###########
-                # wait for fasta files to be created , $status_fas should be 0 if all runs complete
+ 	 	my $status_aug = Fgmp::execute_and_returnWhendone(@$augustusJobs);
+        
+        	# wait for fasta files to be created , $status_fas should be 0 if all runs complete
                 if ($status_aug == '0'){
 				my $statuts_gff2aa = Fgmp::execute_and_returnWhendone(@$gff2aaJobs);
 				if ( $statuts_gff2aa == '0'){
@@ -192,8 +187,8 @@ if ($numOfGenesIngb >= $augTraingCutoff){
                         # do something : something went wrong with the fasta files
                 }
 	 } else {
-	#	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config $WRKDIR/$genome.candidates.fa > $WRKDIR/$genome.candidates.fa.gff");
-	#	Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/getAnnoFasta.pl $WRKDIR/$genome.candidates.fa.gff");
+	 	Fgmp::execute("$FGMP/utils/augustus-3.0.3/bin/augustus --species=$genome --AUGUSTUS_CONFIG_PATH=$FGMP/utils/augustus-3.0.3/config $WRKDIR/$genome.candidates.fa > $WRKDIR/$genome.candidates.fa.gff");
+	 	Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/getAnnoFasta.pl $WRKDIR/$genome.candidates.fa.gff");
 	}
 	
 } else {
@@ -233,14 +228,15 @@ if (-s "$genome.preds.filtered"){
 	warn "A filtered file already exists $genome.preds.filtered and contains $countFil\n";
 	} else {
 		# protein makers
-#		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
+ 		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
 
 		# fUCEs
-#		Fgmp::execute("nhmmer -E 1e-5 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
+ 		Fgmp::execute("nhmmer -E 1e-5 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
 		
 		# search in reads
+		my $makersFoundInReads = "";
 		if (defined($reads)){
-			my $makersFoundInReads = Fgmp::search_in_reads($reads,$protein,$FGMP,$threads);
+			$makersFoundInReads = Fgmp::search_in_reads($reads,$protein,$FGMP,$threads);
 		}	
 
 	# need to clean before

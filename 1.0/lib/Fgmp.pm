@@ -421,8 +421,9 @@ sub compare {
 
 sub runBlastx {
         my ($query,$target,$threads) = @_;
-         execute("~/ocisse/utils/oldBlastall/blast-2.2.11/bin/blastall -p blastx -d $target -i $query -e 1e-5 -v 1 -b 1 -a $threads -m 8 -o $query.blastx ");
-         my %founds = extractMarkers("$query.blastx");
+         #execute("~/ocisse/utils/oldBlastall/blast-2.2.11/bin/blastall -p blastx -d $target -i $query -e 1e-5 -v 1 -b 1 -a $threads -m 8 -o $query.blastx ");
+        execute("blastx -db $target -query $query -evalue 0.01 -num_threads $threads -outfmt 6 -max_target_seqs 1 -out $query.blastx");
+	my %founds = extractMarkers("$query.blastx");
         return(%founds);
 }
 sub extractMarkers {

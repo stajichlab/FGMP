@@ -9,9 +9,6 @@ use Getopt::Long qw(:config no_ignore_case bundling);
 use Fgmp; 
 use IPC::Cmd qw[can_run run run_forked];
 
-# perl fgmp_draft.pl -g sample.dna -p sample.prot --augTraingCutoff 5
-# perl fgmp_draft.pl -g sample.dna -p sample.prot -T 3
-
 # ----------------------------------- #
 # 	VARIABLES
 # ----------------------------------- #
@@ -21,23 +18,10 @@ my $SOFTWARE = "fgmp";
 my $VERSION = "1.0";
 my @clean = ();
 
-#my $FGMP 	= defined($ENV{'FGMP'})	? $ENV{'FGMP'} : '.'; # to implement later
-
-#my $BIN		= defined($ENV{'FGMP'}) ? "$FGMP/bin" : '.';
-#my $SRC	="/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0/src";  # should be bin and I will do when ready to compile stuff
-
-#my $FGMPdata	= defined($ENV{'FGMP'}) ? "$FGMP/data" : "../data";
-
-#my $TMP		= defined($ENV{'FGMP'}) ? $ENV{'FGMPTMP'} : '/tmp';
-
-#my $TMPROOT	= "fgmp_$$";
-#my $FGMPTMP	= "$TMP/$TMPROOT";
-
 # loading paths
-
-my ($FGMP,$WRKDIR) = "";
+my ($FGMP,$WRKDIR,$TMP) = ("","","");
 if (-e 'fgmp.config'){
-	  ($FGMP,$WRKDIR) = Fgmp::load_paths('fgmp.config');
+	  ($FGMP,$WRKDIR,$TMP) = Fgmp::load_paths('fgmp.config');
 } else { 
 	croak "$0 requires config file: fgmp.config\n";
 }
@@ -75,13 +59,9 @@ unless (-e "$genome.candidates.fa"){
 	&run_find_candidate_regions("$WRKDIR/$genome",$protein,$threads);
 }
 
-# test to confirm that the problem come from the candidate section -  before I fix the probleme of "candidate regions
-#Fgmp::execute("cp $genome $genome.candidates.fa");
-
 # Implements sixpack to translate from candidate regions, because exonerate miss some regions
 if (defined ($threads) && ($threads >= 2)){
 	Fgmp::split_and_run_sixpack("$genome.candidates.fa");
-
 }
 
 # ----------------------------------- #
@@ -91,20 +71,20 @@ if (defined ($threads) && ($threads >= 2)){
 
 # initial mapping
 unless (-e "$genome.candidates.fa.p2g"){
-	# chunk the candate regions and runn exonerate in parallel # for speed
 
+	# chunk the candate regions and runn exonerate in parallel # for speed
 	if (defined ($threads) && ($threads >= 2)){
  		my ($nb_seqs,$nb_chunk,$nb_seq_per_chunk,$fastaJobs,$exonerateJobs) = Fgmp::multithread_exonerate("$genome.candidates.fa","$threads","$protein","$FGMP/src",$WRKDIR);
 	
 		&report("CMD:LAUNCHING MULTI-THREAD EXONERATE\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqs\n\tNB OF CHUNKs: $nb_chunk\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunk");
 		
-		# In case we want to write somewhere command file
+		# In case someone want to export commands and launch on a cluster for example
 		#io("$genome.run_exonerate_on_chunk.sh")->write($chunkTodo);;
 	
 		# run exonerate jobs on specified nodes and wait until done;
 		my $status_fas = Fgmp::execute_and_returnWhendone(@$fastaJobs);
 		
-		# wait for fasta files to be created , $status_fas should be 0 if all runs complete
+		# wait for fasta files to be created, $status_fas should be 0 if all runs complete successfully
 		if ($status_fas == '0'){
 			my $status_exo	= Fgmp::execute_and_returnWhendone(@$exonerateJobs);	
 			
@@ -136,7 +116,7 @@ my $fileSize = -s ("$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa");
 if (($fileSize > '373') && (-e "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa")){ # the size of null report from exonerate
 	Fgmp::execute("$FGMP/src/exonerate2proteins.pl $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa > $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
 } else {
-	report("MSG\tEXONERATE has failed");
+	report("MSG\tEXONERATE failed");
 }
 push (@clean, "$WRKDIR/$genome.candidates.fa", "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g", "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa", "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
  
@@ -241,9 +221,6 @@ if (-s "$genome.preds.filtered"){
 
 	# need to clean before
 
-#	Fgmp::execute("perl -pi.old -E 's/.tmp.aln.trimed//' $genome.unfiltered.renamed.hmmsearch");
-#	Fgmp::execute("perl -pi.old -E 's/.aln.trim//' $genome.unfiltered.renamed.hmmsearch");
-
 	# filtering	
 	Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $mark_file $tag $WRKDIR/$genome.nhmmer.out $fuces_prefix $makersFoundInReads --cutoff 0.7"); 
 	
@@ -253,16 +230,11 @@ if (-s "$genome.preds.filtered"){
 }
 push(@clean,"$genome.unfiltered.renamed","$genome.unfiltered.renamed.hmmsearch","$genome.unfiltered.renamed.hmmsearch.log","$genome.unfiltered.renamed.hmmsearch.full_report.tmp","$genome.db.nhr","$genome.db.nin");
 
-
-
-
-
 # ----------------------------------- #
 # CLEANING
 # ----------------------------------- #
-#Fgmp::clean_files(@clean,$TMP,$temp_flg);
+Fgmp::clean_files(@clean,$TMP,$temp_flg);
 #Fgmp::clean_files(@clean,"$genome",$WRKDIR);
-
 
 
 # ----------------------------------- #
@@ -273,19 +245,11 @@ sub run_find_candidate_regions {
 	
 	# TODO : check that fasta header are properly formatted
 
-	# run BLAST+ (too slow)
-#	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -parse_seqids -out $genome_file.db  > /dev/null 2>&1"); # the -parse_seqids makes the program with names with space
-   	 Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -out $genome_file.db  > /dev/null 2>&1");
-	 
+	# run BLAST
+   	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -out $genome_file.db  > /dev/null 2>&1");
     	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 5 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
 	#Fgmp::execute("grep -v \'#\' $genome_file.tblastnOut | cut -f 1 | sort -u > $genome_file.candidates");
 	my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn");	
-
-	# with blastall 
-	#Fgmp::execute("formatdb -i $genome_file -p F");
-	#Fgmp::execute("blastall -p tblastn -d $genome_file -i $prot  -v 5 -b 5 -a $cps -e 0.01 -m 8 -o $genome_file.tblastn");
-        #my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn"); 
-	
 	Fgmp::exportCandidateRegions(\%adjusted,$genome_file);
 
 }

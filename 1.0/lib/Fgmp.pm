@@ -11,18 +11,18 @@ use Bio::SeqIO;
 
 
 sub load_paths {
-	my ($fileP) = @_; 
-
-	my @settings = ();
-	my $paths = io("$fileP");
+	my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
+	
+	my $paths = io(@_);
 	   $paths->autoclose(0);
 	   while (my $lp = $paths->getline || $paths->getline){
 	   chomp $lp;
 		next if $lp =~ m/^#/;
-		my @datapaths = split/=/, $lp;
-		push(@settings, $datapaths[1]);
+		   ($fmpdir) = $lp =~/FGMP=(.*)/;
+		   ($wrkdir) = $lp =~/WRKDIR=(.*)/;
+		   ($tmpdir) = $lp =/TMP=(.*)/;
 	}
-	return(@settings[0..4]);
+	return($fmpdir,$wrkdir,$tmpdir);
 }
 
 sub count_num_of_seqs {
@@ -55,8 +55,8 @@ sub clean_files {
 				execute("mv $file $directory/$tag-temporyfiles");
 			}
 		# compress
-		execute("tar -cvzf $tag-temporyfiles.tar.gz $directory/$tag-temporyfiles");
-		execute("rm -rf $directory/$tag-temporyfiles"); 
+		#execute("tar -cvzf $tag-temporyfiles.tar.gz $directory/$tag-temporyfiles");
+		#execute("rm -rf $directory/$tag-temporyfiles"); 
 	}
 }
 sub split_and_run_sixpack {
@@ -370,6 +370,7 @@ sub search_in_reads {
 	my $num_seqs = scalar @ids;
 
 	my %samples = reservoir_sampling(@ids);
+
 	
 	my %markersFound = ();
 	my $it = "";
@@ -380,22 +381,21 @@ sub search_in_reads {
         	generateFasta(\@sample,$it,$reads,\@ids,$fgmpdir);  # generate for blast $it.fa
         	
 		my %makers = runBlastx("$reads.sampled.$it.fa",$protein,$threads);
+        	my %new = compare(\%makers, \%markersFound);
+		
+		my $new = scalar (keys %new);
+        	my $previous = scalar (keys %markersFound);
 
-        my %new = compare(\%makers, \%markersFound);
-
-        my $new = scalar (keys %new);
-        my $previous = scalar (keys %markersFound);
-
-        if ($new < ($previous * 0.1)){
-                $trials++;
-                warn"...cut off not meet - # warnings\n";
-        } else {
-                warn"...new markers found:\t$new ( previous $previous)";
-        }
-        # update %markerFound
-        # becareful will erase previous data but
+        	if ($new < ($previous * 0.1)){
+                	$trials++;
+                	warn"...only $new markers found - thresold not satisfied - attempt # $trials / 20\n";
+        	} else {
+                	warn"...new markers found:\t$new ( previous $previous)";
+      		  }
+        	# update %markerFound
+        	# becareful will erase previous data but
         	my $t = "";
-		foreach $t ( %makers ) {
+		foreach $t ( keys %makers ) {
                 	$markersFound{$t} = $makers{$t}
         		}
         	last if ($trials == 20);
@@ -421,7 +421,6 @@ sub compare {
 
 sub runBlastx {
         my ($query,$target,$threads) = @_;
-         #execute("~/ocisse/utils/oldBlastall/blast-2.2.11/bin/blastall -p blastx -d $target -i $query -e 1e-5 -v 1 -b 1 -a $threads -m 8 -o $query.blastx ");
         execute("blastx -db $target -query $query -evalue 0.01 -num_threads $threads -outfmt 6 -max_target_seqs 1 -out $query.blastx");
 	my %founds = extractMarkers("$query.blastx");
         return(%founds);
@@ -435,12 +434,11 @@ sub extractMarkers {
                 my @dat = split /\t/,$bl;
                 my ($q,$s,$eval) = ($dat[0],$dat[1],$dat[10]);
 
-                if ($h{$dat[1]}) {
-                        my @tmp = @{$h{$dat[1]}};
+                if ($h{$s}) {
+                        my @tmp = @{$h{$s}};
                         unless ($eval > $tmp[1]){
-                                @{$h{$dat[1]}} = ($q,$eval);
+                                @{$h{$s}} = ($q,$eval);
                         }
-
                 } else {
                         @{$h{$s}} = ($q,$eval);
                 }

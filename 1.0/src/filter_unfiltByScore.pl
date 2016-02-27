@@ -256,6 +256,7 @@ my $completness = sprintf("%.1f",(($fgmpMarkers / $totalFgmp) * 100));
 my $missingFGMPmarkers = scalar %missingFGMPmarkers;
 my $ucesFound = scalar(keys %fucesFound);
 my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / 172) * 100));
+my $markersInReads = sprintf("%.1f",(($reads / 593) * 100));
 
 # printing report 
 	my $logsum .= "| ---------------------------------------------------------- |\n";
@@ -263,7 +264,9 @@ my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / 172) * 100));
 	   $logsum .= "| ---------------------------------------------------------- |\n"; 
 	   $logsum .= "|\tNUM OF UCEs found:\t$ucesFound out of 172\n";
 	   $logsum .= "|\tUCEs completion estimation:\t($ucesFoundPercent\%)\n"; 
- 	   
+	   $logsum .= "| ---------------------------------------------------------- |\n";
+	   $logsum .= "|\t### MISSING fUCEs\n\n"; 	   
+
 	   foreach my $misfucs (keys %fucesMissing){
                         $logsum .="|\t$misfucs\n";
            }
@@ -291,11 +294,13 @@ my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / 172) * 100));
 	   $logsum .= "| ---------------------------------------------------------- |\n";
            $logsum .= "|\tSUMMARY OF READS ANALYSIS\n";
            $logsum .= "| ---------------------------------------------------------- |\n";
-	   $logsum .= "|\tNumber of reads found in reads:\t$reads\n";
+	   $logsum .= "|\tNumber of markers detected in reads:\t$reads\n";
+	   $logsum .= "|\tEstimate completeness:\t$markersInReads (%)\n";
 	   $logsum .= "| ---------------------------------------------------------- |\n\n";
 	   $logsum .= "| These results are based on the set of genes selected by OHC & JES #\n\n";
 	   $logsum .= "| Key:\n";
-	   $logsum .= "| Prots completeness = 593 conserved fungal genes\n";
+	   $logsum .= "| Proteins = 593 conserved fungal genes\n";
+	   $logsum .= "| DNA = 172 fungal ultraconserved elements\n";
 	   $logsum .= "| \%compleness = percent of 593 FCGs in the dataset\n";
 	   $logsum .= "|---------------------------------------------------------- |\n";
 	  
@@ -330,8 +335,6 @@ sub isAbberrant{
 	my %hmmlen = %$hmmlen; 
 	my %seq2mod = %$seq2mod;
 	
-	#say "XXXX";
-	#say Dumper $hmmlen; 
 
 	my $abcount = 0;
 	my %abb = (); 
@@ -443,7 +446,6 @@ sub report {
 sub parse_nhmerData {
 	my ($report,$names) = @_;
 
-
 	my (%found,%missing) = ((),());
 	
 	# read all names
@@ -455,8 +457,6 @@ sub parse_nhmerData {
 		$all{$nl} = $nl;
 	}
 	
-	#
-
 	my %detected = ();
 	my $nh = io($report);
 	   $nh->autoclose(0);
@@ -475,7 +475,6 @@ sub parse_nhmerData {
 		} else {
 			$missing{$i} = $i;
 		}
-
 	}	
 	return(\%found,\%missing);	
 }

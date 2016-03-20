@@ -12,15 +12,17 @@ use Bio::SeqIO;
 
 sub load_paths {
 	my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
-	
 	my $paths = io(@_);
 	   $paths->autoclose(0);
 	   while (my $lp = $paths->getline || $paths->getline){
 	   chomp $lp;
 		next if $lp =~ m/^#/;
-		   ($fmpdir) = $lp =~/FGMP=(.*)/;
-		   ($wrkdir) = $lp =~/WRKDIR=(.*)/;
-		   ($tmpdir) = $lp =/TMP=(.*)/;
+		   ($fmpdir) = $lp if ( $lp =~ m/FGMP=/);
+		    $fmpdir =~s/FGMP=//;
+		   ($wrkdir) = $lp if ( $lp =~ m/WRKDIR=/);
+		    $wrkdir =~s/WRKDIR=//;
+		   ($tmpdir) = $lp if ( $lp =~ m/TMP=/);
+		    $tmpdir =~s/TMP=//;
 	}
 	return($fmpdir,$wrkdir,$tmpdir);
 }
@@ -453,11 +455,13 @@ sub generateFasta {
         my $buffer = "";
         my $id = "";
         foreach $id ( @$list ) {
-                $buffer .="$ids[$id]\n";
+		my @clean = split /\s+/,$ids[$id];
+                #$buffer .="$ids[$id]\n";
+		$buffer .="$clean[0]\n";
         }
         io("$iteration.tmp")->write($buffer);
         execute("perl $dir/src/retrieveFasta.pl $iteration.tmp $readsFile > $readsFile.sampled.$iteration.fa");
-        execute("rm $iteration.tmp");
+        #execute("rm $iteration.tmp");
 }
 sub reservoir_sampling {
         my (@list) = @_;
@@ -465,7 +469,7 @@ sub reservoir_sampling {
 	my %samples = ();
 
         my $num_of_samples = '1000';
-        my $sample_size = '1000';
+        my $sample_size = '10000';
         my $counter = 1;
 	my $num_seqs = scalar (@list);
 

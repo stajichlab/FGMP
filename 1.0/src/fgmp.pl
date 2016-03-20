@@ -1,5 +1,32 @@
 #!/opt/perl/5.16.3/bin/perl -w
 
+##########################################################################
+#                                                                        #
+#                               FGMP                                     #
+#                                                                        #
+##########################################################################
+#                                                                        #
+#                Fungal Genome Mapping Project	                         #
+#                                                                        #
+#              Copyright (C) 20013-2016      Ousmane H. Cisse            #
+#                                            Jason E. Stajich            #
+#                                                                        #
+# This program is free software; you can redistribute it and/or modify   #
+# it under the terms of the GNU General Public License as published by   #
+# the Free Software Foundation; either version 2 of the License, or      #
+# (at your option) any later version.                                    #
+#                                                                        #
+# This program is distributed in the hope that it will be useful, but    #
+# WITHOUT ANY WARRANTY; without even the implied warranty of             #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      #
+# General Public License for more details.                               #
+#                                                                        #
+# You should have received a copy of the GNU General Public License      #
+# along with this program; if not, write to the Free Software            #
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.              #
+#                                                                        #
+##########################################################################
+
 use strict;
 use feature 'say'; 
 use Data::Dumper; 
@@ -37,6 +64,18 @@ my($genome,$protein,$output,$blastdb,$hmm_profiles,$hmm_prefix,$cutoff_file,$mar
 
 # Reading options
 &which_Options(); 
+
+if (!($genome) && ($reads)){
+	my $makersInReads = Fgmp::search_in_reads($reads,$protein,$FGMP,$threads);
+	my $buf .="# no. of reads detected:\t$makersInReads\n";
+	io("$reads.SEARCH_IN_READS.report")->write($buf);
+	&die("#\tstop here -- only reads provided, no genome!");
+}
+
+# Reading options
+&which_Options();
+
+
 
 # ----------------------------------- #
 # 	CHECKS
@@ -91,7 +130,7 @@ unless (-e "$genome.candidates.fa.p2g"){
 			# now concatenate the chunkfile into one p2g file
 			if ( $status_exo == '0'){
 				Fgmp::execute("cat $WRKDIR/$genome*.chunk*.p2g > $WRKDIR/$genome.candidates.fa.p2g"); 
-				#Fgmp::execute("rm $genome*.chunk*");
+				Fgmp::execute("rm $genome*.chunk*");
 			} else {
 				# do something cannot conca 
 			}
@@ -257,6 +296,7 @@ sub run_find_candidate_regions {
 sub report {
 	warn "###\t@_\n";
 }
+
 sub which_Options {
 	GetOptions(
 		"g|genome=s"		=> \$genome, 	# genome fasta file
@@ -283,7 +323,7 @@ sub which_Options {
 	
 	# check if files exists
 	&die("FATAL ERROR!!! --genome or --blastdb not specified")
-		unless (defined($genome) || defined($blastdb));
+		unless (defined($genome) || defined($blastdb) || defined($reads));
 
 	# need to check here that the $genome is in the correct fasta format
 	#&die("FATAL ERROR!!! --verbose and --quiet are mutually exclusive")
@@ -291,7 +331,6 @@ sub which_Options {
 	
 
 	# default settings
-#	$protein	= "$FGMP/data/OneRep.fa" if (!(defined($protein)));
 	$protein        = "$FGMP/data/593_cleanMarkers.fa" if (!(defined($protein)));
 	$output 	= "output" if (!(defined($output))); 
 	$hmm_profiles	= "$FGMP/data/593_cleanMarkers.hmm" if (!(defined($hmm_profiles)));

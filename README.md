@@ -17,23 +17,25 @@ Released: 4/8/25
 # 1. FGMP description
 
 FGMP (Fungal Gene Mapping Project) is a bioinformatic pipeline designed to 
-provide in unbiased manner a set of high quality gene models from any fungal
+provide in an unbiased manner a set of high quality gene models from any fungal
 genome assembly. The strategy is based on the screening of the genome using a 
 set of highly diversified fungal proteins, that is espected to represent a realistic 
 snapshot of fungal diversity). This approach is likely to capture homolog from any 
 fungal genomes. FMP combines ab initio predictions and translated matches to produce 
 its final predictions.
-Using an empirical approach, we identified 245 protein markers that arose early in eukaryotes, 
-are conserved in all fungi. This set of genes display  50% overlap
-with CEGMA 248 eukaryotic markers.  
+Using an empirical approach, we identified 593 protein markers and 172 genomic DNA marrkers 
+are conserved in all fungi.  
 
 A local version of FGMP can be installed on UNIX platforms and it requires
 pre-installation of Perl, NCBI BLAST, HMMER, exonerate and augustus. 
 
-The pipeline uses information from the selected genes of 32 fungi by first using TBLASTN to 
-identify candidate regions in a new genome. Gene structures are first delinated using exonerate and augustus,
+The pipeline uses information from the selected genes of 40 fungi by first using TBLASTN to 
+identify candidate regions in a new genome. Gene structures are delinated using exonerate and augustus,
 and validated using HMMER. At the end FGMP produces a set of best predictions and an estimation of the genome 
 completeness of the genome analyzed. 
+
+FGMP use NHMMER to screen the genome with ultraconserved DNA markers. It is also possible to search 
+protein markers directly in the unassembled reads using BLASTx.
 
 FGMP source code and documentation are available under the GNU GENERAL PUBLIC LICENSE.
 
@@ -99,30 +101,34 @@ available to your Perl installation.
 
 Before running FGMP, type the following commands:
 	
-	export FGMP=/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0
+	export FGMP=/path/to/fgmp
 	export PERL5LIB="$PERL5LIB:$FGMP/lib"
 
-To run FGMP using the 7773 seed proteins and genome completeness evaluation using the
-245 fungal markers run:
+To use FGMP with default settings run:
 	fgmp.pl -g < genomic_fasta_file > 
 
-You can specify the number of cpus to use using the -T option, which will be passes
+You can specify the number of cpus to use using the -T option, which will be passed
 to all subsequent softwares.
 
 	-p, --protein		fasta file of the protein sequence
-				(default: \$FGMP/data/OneRep.fa)
+				(default: $FGMP/data/593_cleanMarkers.fa)
+
+	--fuces_hmm		Directory that contains hmm files
+				(default: $FGMP/data/172_fUCEs.hmm)
+
 	-c, --cutoff_file	Profile cutoffs
-				(default: \$FGMP/data/profiles_cutOff.tbl)
+				(default: $FGMP/data/profiles_cutOff.tbl)
 	--hmm_profiles		Directory that contains hmm files
-				(default: \$FGMP/data/hmm_profiles)
+				(default: $FGMP/data/593_cleanMarkers.hmm)
 	
 
-Example:	fgmp.pl -g sample.dna -p sample.prot --hmm_profiles hmm_profiles \
-		-c profiles_cutOff.tbl
+Example:	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
+
 
 If you have another set of proteins you want use instead, simply provide them. 
 
 
+	
 # ---------------------------------------- #
 # 5. TESTING FGMP
 
@@ -130,34 +136,44 @@ launch the following command and compare the output with the sample files in 'sa
 
 	 perl ../src/fgmp.pl -g sample.dna -p sample.prot 2> log
 
-# running on cluster (example - must be a better way)
+# running on cluster (example )
 	
-	echo "export FGMP=/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0" > run_fgmp.sh	
-	echo "export PERL5LIB="$PERL5LIB:$FGMP/lib"" >> run_fgmp.sh
-	echo "cd ~/bigdata/Project3_cema/Version1/src/fgmp/1.0/sample" >> run_fgmp.sh
-	echo "perl ../src/fgmp.pl -g sample.dna -p sample.prot -T9" >> run_fgmp.sh		
-	qsub -l nodes=1:ppn=9 run_fgmp.sh
+	#PBS -l nodes=1:ppn=4,mem=8gb -N sample_fg -j oe -l walltime=200:00:00
 
-FGMP creates some intermediate files during the annotation.
+	CPU=6
 
-# - final files ( to be kept)
-- sample.dna.bestPreds.fas	: predicted best predictions (fasta format)
-- sample.dna.unfiltered.renamed.hmmsearch.full_report	: detailed analysis of best predictions
-- sample.dna.unfiltered.renamed.hmmsearch.summary_report : summary
+	if [ $PBS_NUM_PPN ]; then
+ 		CPU=$PBS_NUM_PPN
+	fi
 
-# - intermediate files : (likely to be removed)
-- sample.dna.tblastn : 	tblastn output
-- sample.dna.candidates.fa	: Genomic regions extracted based on Tblastn matches coordinates (fasta format)
-- sample.dna.candidates.fa.p2g	: Alignment of 7773 proteins to sample.dna.candidates.fa
-- sample.dna.candidates.fa.p2g.aa : intermediary file contains exonerate alignment matches
-- sample.dna.candidates.fa.p2g.aa.proteins	: translated CDS (amino acids)
-- sample.dna.trainingSet	: augustus training set
-- sample.dna.trainingSet.gb	: augustus training set ( enebank format)
-- sample.dna.unfiltered : merged fasta files containing both exonerate CDS and augustus predictions
-- sample.dna.unfiltered.renamed : renamed 'sample.dna.unfiltered' to avoid name clashes
-- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
+	export FGMP=/path/to/fgmp/1.0
+	export PERL5LIB="/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/lib:$FGMP/lib"
 
-If you want to keep intermediary files use the --keep option ( working on that ...)
+	cd /fgmp/1.0/sample
+
+	perl $FGMP/src/fgmp.pl \
+	-g Mycosphaerella_graminicola_IPO323.Mycgr3.v2.fasta \
+	-T $CPU
+
+	FGMP creates some intermediate files during the annotation.
+
+	# - final files ( to be kept)
+	- sample.dna.bestPreds.fas	: predicted best predictions (fasta format)
+	- sample.dna.unfiltered.renamed.hmmsearch.full_report: detailed analysis of best predictions
+	- sample.dna.unfiltered.renamed.hmmsearch.summary_report: summary
+
+	# - intermediate files : (likely to be removed)
+	- sample.dna.tblastn : 	tblastn output
+	- sample.dna.candidates.fa	: Genomic regions extracted based on Tblastn matches coordinates (fasta format)
+	- sample.dna.candidates.fa.p2g	: Alignment of 7773 proteins to sample.dna.candidates.fa
+	- sample.dna.candidates.fa.p2g.aa : intermediary file contains exonerate alignment matches
+	- sample.dna.candidates.fa.p2g.aa.proteins	: translated CDS (amino acids)
+	- sample.dna.trainingSet	: augustus training set
+	- sample.dna.trainingSet.gb	: augustus training set ( enebank format)
+	- sample.dna.unfiltered : merged fasta files containing both exonerate CDS and augustus predictions
+	- sample.dna.unfiltered.renamed : renamed 'sample.dna.unfiltered' to avoid name clashes
+	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
+
 
 # ---------------------------------------- #
 # 6. AUTHORS AND HELP
@@ -170,4 +186,4 @@ FGMP home page is at https://github.com/stajichlab/FGMP
 # ---------------------------------------- #
 # 7. Citing FGMP
 
-in preparation.
+OHC AND JES (2016) FGMP: assessing genome completion in fungal genomic data. in preparation.

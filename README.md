@@ -52,6 +52,7 @@ clone from https://github.com/stajichlab/FGMP
 or
 
 wget -np biocluster.ucr.edu/~ocisse/manuscript/FGMP.v.1.0.tar.gz
+
 tar -xvzf FGMP.v.1.0.tar.gz
 
 #CMD:	tar -xvzf FGMP.tar.gz

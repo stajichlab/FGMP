@@ -20,14 +20,14 @@ FGMP (Fungal Gene Mapping Project) is a bioinformatic pipeline designed to
 provide in an unbiased manner a set of high quality gene models from any fungal
 genome assembly. The strategy is based on the screening of the genome using a 
 set of highly diversified fungal proteins, that is espected to represent a realistic 
-snapshot of fungal diversity). This approach is likely to capture homolog from any 
+snapshot of fungal diversity. This approach is likely to capture homolog from any 
 fungal genomes. FMP combines ab initio predictions and translated matches to produce 
 its final predictions.
 Using an empirical approach, we identified 593 protein markers and 172 genomic DNA marrkers 
 are conserved in all fungi.  
 
 A local version of FGMP can be installed on UNIX platforms and it requires
-pre-installation of Perl, NCBI BLAST, HMMER, exonerate and augustus. 
+pre-installation of Perl, NCBI BLAST, HMMER, EXONERATE and AUGUSTUS. 
 
 The pipeline uses information from the selected genes of 40 fungi by first using TBLASTN to 
 identify candidate regions in a new genome. Gene structures are delinated using exonerate and augustus,
@@ -35,7 +35,8 @@ and validated using HMMER. At the end FGMP produces a set of best predictions an
 completeness of the genome analyzed. 
 
 FGMP use NHMMER to screen the genome with ultraconserved DNA markers. It is also possible to search 
-protein markers directly in the unassembled reads using BLASTx.
+protein markers directly in the unassembled reads. Reads are randomly sampled using reservoir sampling
+algorithm and screen using BLASTx.
 
 FGMP source code and documentation are available under the GNU GENERAL PUBLIC LICENSE.
 
@@ -46,14 +47,21 @@ The FGMP distribution includes several directories and files. Source code
 as well as documented are provided in the distribution. To decompress 
 simply enter the following command in the shell: 
 
-CMD:	tar -xvzf FGMP.tar.gz
+clone from https://github.com/stajichlab/FGMP 
+
+or
+
+wget -np biocluster.ucr.edu/~ocisse/manuscript/FGMP.v.1.0.tar.gz
+tar -xvzf FGMP.v.1.0.tar.gz
+
+#CMD:	tar -xvzf FGMP.tar.gz
 
 The directory 'fgmp_v1.0' will be created in your current directory. 
 
 FGMP requieres the pre-installation of the following software: 
 
-- hmmer (HMMER v3.0)	http://hmmer.janelia.org/
-- NCBI BLASTALL (tested using version 2.2.21)
+- HMMER v3.0	http://hmmer.janelia.org/
+- NCBI BLASTALL (tested using version 2.2.21) ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.21/
 - exonerate (tested using version 2.2.0)
 - augustus (tested using version 3.0.3)
 

@@ -153,7 +153,7 @@ unless (-e "$WRKDIR/$genome.candidates.fa.p2g.aa"){
 # check if the exonerate file is empty, because even empty exonerate generates a minimal outp
 my $fileSize = -s ("$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa");
 if (($fileSize > '373') && (-e "$WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa")){ # the size of null report from exonerate
-	Fgmp::execute("$FGMP/src/exonerate2proteins.pl $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa > $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
+	Fgmp::execute("perl $FGMP/src/exonerate2proteins.pl $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa > $WRKDIR/$genome.candidates.fa.withoutGFF.p2g.aa.proteins");
 } else {
 	report("MSG\tEXONERATE failed");
 }
@@ -164,13 +164,13 @@ push (@clean, "$WRKDIR/$genome.candidates.fa", "$WRKDIR/$genome.candidates.fa.wi
 # ----------------------------------- #
 &report("INFO\tAB INITIO PREDS");
 
-Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/exonerate2hints.pl --in=$WRKDIR/$genome.candidates.fa.p2g --out=$WRKDIR/$genome.trainingSet");
-Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/gff2gbSmallDNA.pl $WRKDIR/$genome.trainingSet $WRKDIR/$genome 100 $WRKDIR/$genome.trainingSet.gb");
+Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/exonerate2hints.pl --in=$WRKDIR/$genome.candidates.fa.p2g --out=$WRKDIR/$genome.trainingSet");
+Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/gff2gbSmallDNA.pl $WRKDIR/$genome.trainingSet $WRKDIR/$genome 100 $WRKDIR/$genome.trainingSet.gb");
 
 my $numOfGenesIngb = Fgmp::how_many_locus("$genome.trainingSet.gb");
 
 if ($numOfGenesIngb >= $augTraingCutoff){
-		Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/randomSplit.pl $genome.trainingSet.gb $augTraingCutoff");
+		Fgmp::execute("perl $FGMP/utils/augustus-3.0.3/scripts/randomSplit.pl $genome.trainingSet.gb $augTraingCutoff");
 	
 	# check if this dir already exists then erase if there
 	Fgmp::execute("rm -rf $FGMP/utils/augustus-3.0.3/config/species/$genome") if (-e "$FGMP/utils/augustus-3.0.3/config/species/$genome"); 
@@ -231,7 +231,7 @@ push (@clean, "$genome.trainingSet", "$genome.trainingSet.gb", "tee firsttest.$g
 	# test transeq
 	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.translated >> $WRKDIR/$genome.unfiltered") if (-e "$WRKDIR/$genome.candidates.fa.translated");
 	
- 	Fgmp::execute("$FGMP/src/rename.pl $WRKDIR/$genome.unfiltered > $WRKDIR/$genome.unfiltered.renamed");	
+ 	Fgmp::execute("perl $FGMP/src/rename.pl $WRKDIR/$genome.unfiltered > $WRKDIR/$genome.unfiltered.renamed");	
 	my $countUn = Fgmp::count_num_of_seqs("$WRKDIR/$genome.unfiltered.renamed");	
 	warn"No. of unfiltered predictions\t$countUn\n";
 
@@ -286,7 +286,7 @@ sub run_find_candidate_regions {
 
 	# run BLAST
    	Fgmp::execute("makeblastdb -in $genome_file -dbtype nucl -out $genome_file.db  > /dev/null 2>&1");
-    	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 5 -max_target_seqs 5 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
+    	Fgmp::execute("tblastn -db $genome_file.db -query $prot -word_size 6 -max_target_seqs 5 -evalue 0.01 -seg yes -num_threads $cps -outfmt  \"7 sseqid sstart send sframe bitscore qseqid\" > $genome_file.tblastn");
 	#Fgmp::execute("grep -v \'#\' $genome_file.tblastnOut | cut -f 1 | sort -u > $genome_file.candidates");
 	my (%adjusted) = Fgmp::extractCandidateRegion("$genome_file.tblastn");	
 	Fgmp::exportCandidateRegions(\%adjusted,$genome_file);

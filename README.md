@@ -55,14 +55,12 @@ wget -np biocluster.ucr.edu/~ocisse/manuscript/FGMP.v.1.0.tar.gz
 
 tar -xvzf FGMP.v.1.0.tar.gz
 
-#CMD:	tar -xvzf FGMP.tar.gz
-
 The directory 'fgmp_v1.0' will be created in your current directory. 
 
 FGMP requieres the pre-installation of the following software: 
 
 - HMMER v3.0	http://hmmer.janelia.org/
-- NCBI BLASTALL (tested using version 2.2.21) ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.21/
+- NCBI BLASTALL (tested using version 2.2.31+) ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.21/
 - exonerate (tested using version 2.2.0)
 - augustus (tested using version 3.0.3)
 
@@ -101,7 +99,9 @@ FGMP	- the path to the FGMP folder
 WRKDIR	- working directory	(where are the fasta files)
 
 For example: 
+
 FGMP=/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0
+
 WRKDIR=/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0/sample
 
 FGMP uses a custom library Fgmp.pm. You need set the PERL5LIB environment variable 
@@ -112,6 +112,11 @@ Before running FGMP, type the following commands:
 	
 	export FGMP=/path/to/fgmp
 	export PERL5LIB="$PERL5LIB:$FGMP/lib"
+
+	example:
+	export FGMP=/rhome/ocisse/ocisse/tmp/FGMP.v.1.0/1.0
+	export PERL5LIB="$PERL5LIB:$FGMP/lib"
+
 
 To use FGMP with default settings run:
 	fgmp.pl -g < genomic_fasta_file > 
@@ -143,9 +148,11 @@ If you have another set of proteins you want use instead, simply provide them.
 
 launch the following command and compare the output with the sample files in 'sample_output'
 
-	 perl ../src/fgmp.pl -g sample.dna -p sample.prot 2> log
+	 perl $FGMP/src/fgmp.pl -g sample.dna 2> log
 
-# running on cluster (example )
+	 note: the configuration file 'fgmp.config' need to be placed in the current directory 
+
+# running on cluster (example)
 	
 	#PBS -l nodes=1:ppn=4,mem=8gb -N sample_fg -j oe -l walltime=200:00:00
 
@@ -164,23 +171,23 @@ launch the following command and compare the output with the sample files in 'sa
 	-g Mycosphaerella_graminicola_IPO323.Mycgr3.v2.fasta \
 	-T $CPU
 
-	FGMP creates some intermediate files during the annotation.
+	FGMP will create some intermediate files during the annotation.
 
-	# - final files ( to be kept)
+	# - final files:
 	- sample.dna.bestPreds.fas	: predicted best predictions (fasta format)
 	- sample.dna.unfiltered.renamed.hmmsearch.full_report: detailed analysis of best predictions
 	- sample.dna.unfiltered.renamed.hmmsearch.summary_report: summary
 
-	# - intermediate files : (likely to be removed)
-	- sample.dna.tblastn : 	tblastn output
-	- sample.dna.candidates.fa	: Genomic regions extracted based on Tblastn matches coordinates (fasta format)
-	- sample.dna.candidates.fa.p2g	: Alignment of 7773 proteins to sample.dna.candidates.fa
-	- sample.dna.candidates.fa.p2g.aa : intermediary file contains exonerate alignment matches
-	- sample.dna.candidates.fa.p2g.aa.proteins	: translated CDS (amino acids)
-	- sample.dna.trainingSet	: augustus training set
-	- sample.dna.trainingSet.gb	: augustus training set ( enebank format)
-	- sample.dna.unfiltered : merged fasta files containing both exonerate CDS and augustus predictions
-	- sample.dna.unfiltered.renamed : renamed 'sample.dna.unfiltered' to avoid name clashes
+	# - intermediate files: 
+	- sample.dna.tblastn: 	tblastn output
+	- sample.dna.candidates.fa: Genomic regions extracted based on Tblastn matches coordinates (fasta format)
+	- sample.dna.candidates.fa.p2g: Alignment of 593 proteins to candidates.fa
+	- sample.dna.candidates.fa.p2g.aa: exonerate alignment matches
+	- sample.dna.candidates.fa.p2g.aa.proteins: translated CDS (amino acids)
+	- sample.dna.trainingSet: augustus training set
+	- sample.dna.trainingSet.gb: augustus training set (genbank format)
+	- sample.dna.unfiltered: unfiltered predicted peptides
+	- sample.dna.unfiltered.renamed : renamed predicted peptides to avoid name conflits
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
 
@@ -195,4 +202,4 @@ FGMP home page is at https://github.com/stajichlab/FGMP
 # ---------------------------------------- #
 # 7. Citing FGMP
 
-OHC AND JES (2016) FGMP: assessing genome completion in fungal genomic data. in preparation.
+OHC AND JES (2016) FGMP: assessing genome completion in fungal genomic data. manuscript in preparation.

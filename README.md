@@ -28,7 +28,7 @@ A local version of FGMP can be installed on UNIX platforms. The tool requires th
 pre-installation of Perl, NCBI BLAST, HMMER, EXONERATE and AUGUSTUS. 
 
 The pipeline uses information from the selected genes of 40 fungi by first using TBLASTN to 
-identify candidate regions in a new genome. Gene structures are delinated using exonerate and augustus,
+identify candidate regions in a new genome. Gene structures are delinated using EXONERATE and AUGUSTUS
 and validated using HMMER. At the end FGMP produces a set of best predictions and an estimation of the genome 
 completeness of the genome analyzed. 
 
@@ -41,8 +41,8 @@ FGMP source code and documentation are available under the GNU GENERAL PUBLIC LI
 # ---------------------------------------- #
 # 2. running FGMP 
 
-The FGMP distribution includes several directories and files. Source code 
-as well as documented are provided in the distribution. To decompress 
+The FGMP distribution includes several directories and files. Source codes
+and documentation are provided in the distribution. To decompress 
 simply enter the following command in the shell: 
 
 clone from https://github.com/stajichlab/FGMP 
@@ -55,9 +55,9 @@ tar -xvzf FGMP.v.1.0.tar.gz
 
 The directory 'fgmp_v1.0' will be created in your current directory. 
 
-FGMP requieres the pre-installation of the following software: 
+FGMP requires the pre-installation of the following software: 
 
-- Perl (tested using the Perl 5, version 20)
+- Perl 5 (tested with the version 20)
 - HMMER v3.0	http://hmmer.janelia.org/
 - NCBI BLASTALL (tested using version 2.2.31+) ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.21/
 - exonerate (tested using version 2.2.0)
@@ -69,18 +69,19 @@ FGMP requieres the pre-installation of the following software:
 
 The FGMP distribution includes the following files and directories:
 
-- data/	Proteins, profiles and cutoff.
-- lib/	Perl modules
-- sample/	DNA and protein fasta file to test FGMP.
+- data/				Proteins, profiles and cutoff.
+- lib/				Perl modules
+- sample/			DNA and protein fasta file to test FGMP.
 - sample_output/	Results provided by FGMP for the test files.
-- src/	Source code of FGMP.
-- GNULicence	This software is registed under the GNU licence.	
-- READE.md	This file.
-- fgmp.config	a file that needs to be set up with path directories
-- utils/	contains augustus and some useful scripts (see below)
+- src/				Source code of FGMP.	
+- READE.md			This file.
+- fgmp.config		a file that needs to be set up with path directories
+- utils/			contains useful scripts (see below)
 
-- countDomains.pl - a parser that count the number of domains in the output of HMMER
-- simplifyNcbiHeader.pl - a parser to remove unecessary information from NCBI contigs header. 
+NOTE: augustus distribution should be placed in utils/
+
+example: FGMP.v.1.0/1.0/utilsaugustus-3.0.3
+
 
 # ---------------------------------------- #
 # 4. running FGMP
@@ -89,8 +90,8 @@ The FGMP distribution includes the following files and directories:
 
 IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files
 
-In the file 'fgmp.config' there several environmental variables
-that need to be set up by the users.
+In the file 'fgmp.config' contains several environmental variables
+that need to be set up by the user.
 
 It contains the following variables:
 

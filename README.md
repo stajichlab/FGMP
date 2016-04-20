@@ -17,16 +17,14 @@ Released: 4/8/25
 # 1. FGMP description
 
 FGMP (Fungal Gene Mapping Project) is a bioinformatic pipeline designed to 
-provide in an unbiased manner a set of high quality gene models from any fungal
+provide in an unbiased manner a set of high quality gene models from fungal
 genome assembly. The strategy is based on the screening of the genome using a 
 set of highly diversified fungal proteins, that is espected to represent a realistic 
-snapshot of fungal diversity. This approach is likely to capture homolog from any 
-fungal genomes. FMP combines ab initio predictions and translated matches to produce 
-its final predictions.
-Using an empirical approach, we identified 593 protein markers and 172 genomic DNA marrkers 
-are conserved in all fungi.  
+snapshot of fungal diversity. This approach is likely to capture homologs from any 
+fungal genome. FMP is based on 593 protein markers and 172 genomic DNA markers 
+are conserved in fungi.  
 
-A local version of FGMP can be installed on UNIX platforms and it requires
+A local version of FGMP can be installed on UNIX platforms. The tool requires the
 pre-installation of Perl, NCBI BLAST, HMMER, EXONERATE and AUGUSTUS. 
 
 The pipeline uses information from the selected genes of 40 fungi by first using TBLASTN to 
@@ -59,6 +57,7 @@ The directory 'fgmp_v1.0' will be created in your current directory.
 
 FGMP requieres the pre-installation of the following software: 
 
+- Perl (tested using the Perl 5, version 20)
 - HMMER v3.0	http://hmmer.janelia.org/
 - NCBI BLASTALL (tested using version 2.2.31+) ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.21/
 - exonerate (tested using version 2.2.0)

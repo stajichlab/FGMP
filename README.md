@@ -60,7 +60,7 @@ FGMP requires the pre-installation of the following software:
 - Perl 5 (tested with the version 20)
 - BioPerl-1.6.924 
 - HMMER v3.0	http://hmmer.janelia.org/
-- NCBI BLASTALL (tested using version 2.2.31+) ftp://ftp.ncbi.nih.gov/blast/executables/release/2.2.21/
+- NCBI BLASTALL (tested using version 2.2.31+) 
 - exonerate (tested using version 2.2.0)
 - augustus (tested using version 3.0.3)
 

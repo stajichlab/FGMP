@@ -9,6 +9,8 @@ use Data::Dumper;
 use List::Util qw(max min);
 use Bio::SeqIO;
 
+our ($VERSION, $DEBUG, $CALLER);
+$VERSION = '0.1';
 
 sub load_paths {
 	my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
@@ -47,20 +49,30 @@ sub execute {
         system($cmmd)==0 || croak "cannot execute\t$cmmd:$!\n";
 
 }
+
 sub clean_files {
-	my (@files, $tag,$directory) = @_; 
+	my ($files,$directory,$tag) = @_; 
+	
+	my @listOfFiles = @$files;
+	my $dir = $$directory;
+	my $Tag = $$tag;
 
-	execute("mkdir -p $directory/$tag-temporyfiles");
-
-		foreach my $file (@files){
-			if ( -e $file){
-				execute("mv $file $directory/$tag-temporyfiles");
+	if ($Tag eq 'FALSE'){
+		foreach my $file (@listOfFiles){
+			if (-e $file){
+				execute("unlink $file");
 			}
-		# compress
-		#execute("tar -cvzf $tag-temporyfiles.tar.gz $directory/$tag-temporyfiles");
-		#execute("rm -rf $directory/$tag-temporyfiles"); 
+		}
+	} else {
+		execute("mkdir -p $dir");
+			foreach my $file (@listOfFiles){
+				if (-e $file){
+					execute("mv $dir");
+				}
+		}
 	}
 }
+
 sub split_and_run_sixpack {
 	my ($multifasta) = @_; 
 
@@ -80,13 +92,6 @@ sub split_and_run_sixpack {
 	execute("cat $multifasta.sixpack_tmp/\*.orfs > $multifasta.orfs");
 }
 
-sub transeq {
-	 my ($multifasta1) = @_;
-	
-	execute("transeq -clean -frame 6 -trim -sequence $multifasta1 -outseq $multifasta1.translated"); 
-
-
-}
 sub multithread_exonerate {
 	my ($candidateFasta, $cpuAvail, $proteins, $srcdir,$outdir) = @_;
 
@@ -105,15 +110,14 @@ sub multithread_exonerate {
 	my $i = 0;
 	# don't worry I catch it here 
 	# the problem with this is that it will print 10 chunk of 8 seqs, but miss one seq
-
-	# hey this might bug if there more cpus than candidate, then the ratio will be less than 1	
+	# hey this might be a bug if there more cpus than candidate, then the ratio will be less than 1	
 	while ((@seqs) > 1){
 		my @chunk = splice(@seqs,1,$numOfseqPerChunks);
 		my $chunk = join("\t", @chunk);
 		push(@allChunks,$chunk);		
 		}
 
-	# catch the remaining in case of impair numer
+	# catch the remaining in case of impair number
 		my $impair = join("",@seqs);
 
 	# now adding the first element of the list
@@ -173,10 +177,6 @@ sub multithread_augustus {
         my $numOfseqPerChunks = sprintf("%.0f",($numOfseqs / $numOfChunks));
 
         my $i = 0;
-        # don't worry I catch it here
-        # the problem with this is that it will print 10 chunk of 8 seqs, but miss one seq
-
-        # hey this might bug if there more cpus than candidate, then the ratio will be less than 1
         while ((@seqs) > 1){
                 my @chunk = splice(@seqs,1,$numOfseqPerChunks);
                 my $chunk = join("\t", @chunk);
@@ -218,13 +218,10 @@ sub multithread_augustus {
         # and launch exonerate
         my $ext = "";
         foreach $ext (@chunksForFastaExtr){
-                # You need to update the path later
-            #    push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
 		push(@run_aug,"$augdir/bin/augustus --species=$speciestag --AUGUSTUS_CONFIG_PATH=$augdir/config $outdir/$ext.fas > $outdir/$ext.gff");
        		push(@run_gff2aa,"$augdir/scripts/getAnnoFasta.pl $outdir/$ext.gff");
 		push(@toconcat,"$outdir/$ext.aa");
 	 }
-        #return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@runs_fas,\@run_aug,\@run_gff2aa);
 	return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@run_aug,\@run_gff2aa,\@toconcat);
 }
 
@@ -373,7 +370,6 @@ sub search_in_reads {
 
 	my %samples = reservoir_sampling(@ids);
 
-	
 	my %markersFound = ();
 	my $it = "";
 	my $trials = 0;
@@ -390,9 +386,9 @@ sub search_in_reads {
 
         	if ($new < ($previous * 0.1)){
                 	$trials++;
-                	warn"...only $new markers found - thresold not satisfied - attempt # $trials / 20\n";
+                	warn"...only $new markers found - threshold not satisfied - attempt # $trials / 20\n";
         	} else {
-                	warn"...new markers found:\t$new ( previous $previous)";
+                	warn"...new markers found:\t$new (previous $previous)";
       		  }
         	# update %markerFound
         	# becareful will erase previous data but
@@ -503,6 +499,65 @@ sub load {
                 }
         }
         return(@array);
+}
+sub check_multicopies {
+	my ($hmmreportFile,$multicopiesFile) = @_; 
+	
+	my %copiesWithLowerThanExpected = ();
+	my %multicopies = loadcsv($multicopiesFile);
+
+	my $buffHmms = "";
+	my $m = "";
+	foreach $m ( keys %multicopies ) {
+		my $n = how_many_copies($m,$hmmreportFile);
+		if ( $n < $multicopies{$m} ){
+			$buffHmms .="$m\tdetected:\t$n,\texpected:\t$multicopies{$m}\tLOW\n";
+		} elsif ( $n > $multicopies{$m} ) {
+			#$buffHmms .="$m\tfound:\t$n,expected:\t$multicopies{$m}\tHIGH\n";
+		} else {
+			next;
+		}		
+	}
+	io("$hmmreportFile.multicopies_check.csv")->write($buffHmms);	
+}
+
+sub how_many_copies {
+	my ($hmmtofind,$hmmfile,$report) = @_;
+	my @arrhmms = ();
+	my $hm1 = io($hmmfile);
+	   $hm1->autoclose(0);
+	   while ( my $hml1 = $hm1->getline || $hm1->getline ) {
+	   chomp $hml1; 
+		next if $hml1 =~ m/^#/;
+        	next if $hml1 =~ m/^$hmmtofind/; # those are proteins
+
+		if ( $hml1 =~ m/$hmmtofind/ ) {
+			my @dathm1 = split /\s+/, $hml1;
+			my ($prot,$hm,$eval) = ($dathm1[0],$dathm1[3],$dathm1[6]);
+		               if ( $eval < 1e-20 ) {
+                	                push(@arrhmms,$prot);
+                                }
+		} else {
+			next;
+		}
+	}
+	my %uniqProtein = ();
+	my $uni = "";
+	foreach $uni ( @arrhmms ) {
+		$uniqProtein{$uni}++;
+	}
+	return(scalar(keys %uniqProtein ));
+}
+sub loadcsv {
+	my %multi = ();
+	my $csv = io(@_);
+	   $csv->autoclose(0);
+	   while ( my $csvl = $csv->getline || $csv->getline ) {
+	   chomp $csvl; 
+		my @csvdat = split /,/, $csvl;
+	        $multi{$csvdat[0]} = $csvdat[1];
+	} 
+	return(%multi);
 }
 1;
 

@@ -1,4 +1,4 @@
-#!/opt/perl/5.16.3/bin/perl -w
+#!/usr/bin/env perl
 
 use strict; 
 use feature 'say'; 

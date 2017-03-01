@@ -4,6 +4,7 @@ use feature 'say';
 use Data::Dumper; 
 use Carp; 
 use strict; 
+use warnings;
 
 
 my $in = shift; 

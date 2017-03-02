@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict; 
+use warnings;
 use Carp; 
 use feature 'say'; 
 use IO::All; 

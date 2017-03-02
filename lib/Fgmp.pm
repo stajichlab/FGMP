@@ -1,5 +1,9 @@
+# This module is a set of system resoures for FGMP
+
 package Fgmp;
 use strict; 
+use warnings;
+
 use IO::All; 
 use Carp;
 use feature 'say';  
@@ -9,29 +13,28 @@ use Data::Dumper;
 use List::Util qw(max min);
 use Bio::SeqIO;
 
-
 sub load_paths {
-	my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
-	my $paths = io(@_);
-	   $paths->autoclose(0);
-	   while (my $lp = $paths->getline || $paths->getline){
-	   chomp $lp;
-		next if $lp =~ m/^#/;
-		   ($fmpdir) = $lp if ( $lp =~ m/FGMP=/);
-		    $fmpdir =~s/FGMP=//;
-		   ($wrkdir) = $lp if ( $lp =~ m/WRKDIR=/);
-		    $wrkdir =~s/WRKDIR=//;
-		   ($tmpdir) = $lp if ( $lp =~ m/TMP=/);
-		    $tmpdir =~s/TMP=//;
-	}
-	return($fmpdir,$wrkdir,$tmpdir);
+    my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
+    my $paths = io(@_);
+    $paths->autoclose(0);
+    while (my $lp = $paths->getline || $paths->getline){
+	chomp $lp;
+	next if $lp =~ m/^#/;
+	($fmpdir) = $lp if ( $lp =~ m/FGMP=/);
+	$fmpdir =~s/FGMP=//;
+	($wrkdir) = $lp if ( $lp =~ m/WRKDIR=/);
+	$wrkdir =~s/WRKDIR=//;
+	($tmpdir) = $lp if ( $lp =~ m/TMP=/);
+	$tmpdir =~s/TMP=//;
+    }
+    return($fmpdir,$wrkdir,$tmpdir);
 }
 
 sub count_num_of_seqs {
-	my ($file) = @_; 
-	my $num = `grep -c \">\" $file`;
-	chomp($num);
-	return($num);
+    my ($file) = shift @_; 
+    my $num = `grep -c \">\" $file`;
+    chomp($num);
+    return($num);
 }
 
 sub how_many_locus {
@@ -42,42 +45,66 @@ sub how_many_locus {
 }
 
 sub execute {
-        my ($cmmd) = @_;
-        warn "###\t$cmmd\n";
-        system($cmmd)==0 || croak "cannot execute\t$cmmd:$!\n";
+    my ($cmmd) = @_;
+    warn "###\t$cmmd\n";
+    system($cmmd)==0 || croak "cannot execute\t$cmmd:$!\n";
 
 }
+
 sub clean_files {
-	my (@files, $tag,$directory) = @_; 
+    my (@files, $tag,$directory) = @_; 
+    # replace with mkdir
+    execute("mkdir -p $directory/$tag-temporyfiles");
 
-	execute("mkdir -p $directory/$tag-temporyfiles");
-
-		foreach my $file (@files){
-			if ( -e $file){
-				execute("mv $file $directory/$tag-temporyfiles");
-			}
-		# compress
-		#execute("tar -cvzf $tag-temporyfiles.tar.gz $directory/$tag-temporyfiles");
-		#execute("rm -rf $directory/$tag-temporyfiles"); 
+    foreach my $file (@files){
+	if ( -e $file){
+	    # replace with move command from File::Copy
+	    execute("mv $file $directory/$tag-temporyfiles");
 	}
+	# compress
+
+	#execute("tar -cvzf $tag-temporyfiles.tar.gz $directory/$tag-temporyfiles");
+	#execute("rm -rf $directory/$tag-temporyfiles"); 
+    }
 }
+
 sub split_and_run_sixpack {
-	my ($multifasta) = @_; 
+    my ($multifasta) = @_; 
+    my $tmp6packdir = "$multifasta.sixpack_tmp";
+    # external dependency - needs to be well documented and perhaps
+    # made as a variable
+    execute("csplit -s -f $multifasta.chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
+    # can we use temporary files / dirs instead 
+    # File::Temp ?
+    execute("rm -rf $tmp6packdir ") if (-d $tmp6packdir );
+    mkdir("$multifasta.sixpack_tmp");
 
-	execute("csplit -s -f $multifasta.chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
-	execute("rm -rf $multifasta.sixpack_tmp") if (-d "$multifasta.sixpack_tmp");
-	execute("mkdir $multifasta.sixpack_tmp"); 
-	execute("mv $multifasta.chunk_6p\* $multifasta.sixpack_tmp");
-	my $io = io("$multifasta.sixpack_tmp");
-	my @contents = $io->all; 
+    # use File::Copy mv instead?
+    execute("mv $multifasta.chunk_6p\* $tmp6packdir");
+
+    my $io = io($tmp6packdir);
+    my @contents = $io->all; 
+
+
+    # run sixpack
+    open(my $ofh => ">$multifasta.orfs") ||
+	die "Cannot open $multifasta.orfs for writing: $!";
+
+    foreach my $chk ( @contents) {
+	execute("sixpack -sequence $chk -outfile $chk.sixpack -outseq $chk.orfs -orfminsize 50");
 	
-	my $chk = "";
-	foreach $chk ( @contents) {
-		execute("sixpack -sequence $chk -outfile $chk.sixpack -outseq $chk.orfs -orfminsize 50");
-	}
+    }
 
-	# concatenate
-	execute("cat $multifasta.sixpack_tmp/\*.orfs > $multifasta.orfs");
+    # concatenate
+    # do this with file open in perl instead?
+    opendir(DIR, $tmp6packdir) || die "cannot open $tmp6packdir: $!";
+    foreach my $file ( readdir(DIR) ) {
+	next unless $file =~ /\.orfs$/;
+	my $resultfile =  File::Spec->catfile($tmp6packdir,$file);
+	open(my $fh => $resultfile ) || die "cannot open $resultfile: $!";
+	while(<$fh>) { print $ofh $_ }
+	close($fh);
+    }
 }
 
 sub transeq {
@@ -148,15 +175,23 @@ sub multithread_exonerate {
 	# and launch exonerate
 	my $ext = ""; 
 	foreach $ext (@chunksForFastaExtr){
-		# You need to update the path later
-		push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
-		push(@run_exo,"exonerate --model protein2genome --percent 5 -q $proteins --showtargetgff Y -t $outdir/$ext.fas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $outdir/$ext.p2g");
+
+	    # AUDIT: this needs to be re-written to not depend this way
+
+	    # You need to update the path later
+	    open(my $outseq => ">$outdir/$ext.fas");
+	    
+	    push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
+	    
+	    push(@run_exo,"exonerate --model protein2genome --percent 5 -q $proteins --showtargetgff Y -t $outdir/$ext.fas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $outdir/$ext.p2g");
 
 	}
 	return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@runs_fas,\@run_exo);
 }
+
 sub multithread_augustus {
-        my ($candidateFasta, $cpuAvail, $proteins, $srcdir, $augdir,$outdir,$speciestag) = @_;
+        my ($candidateFasta, $cpuAvail, $proteins, 
+	    $srcdir, $augdir,$outdir,$speciestag) = @_;
 
         my $elementTmp = "";
         my @allChunks = ();
@@ -360,50 +395,50 @@ sub run_on_single_node {
 	my ($genomeFas,$protFas,$direct) = @_; 
 	execute("exonerate --model protein2genome --percent 5 -q $protFas --showtargetgff Y -t $direct/$genomeFas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $direct/$genomeFas.p2g"); 
 }
+
 sub search_in_reads {
-	my ($reads,$protein,$fgmpdir,$threads) = @_;
+    my ($reads,$protein,$fgmpdir,$threads) = @_;
 
-	my @markers = load($protein);	
-	
-	my $ids = `grep \'^>\' $reads`;
-	   $ids =~s/\n//g;
-	   
-	my @ids = split />/,$ids;
-	my $num_seqs = scalar @ids;
+    my @markers = load($protein);	
 
-	my %samples = reservoir_sampling(@ids);
+    my $ids = `grep \'^>\' $reads`;
+    $ids =~s/\n//g;
 
-	
-	my %markersFound = ();
-	my $it = "";
-	my $trials = 0;
+    my @ids = split />/,$ids;
+    my $num_seqs = scalar @ids;
 
-	foreach $it ( keys %samples) {
-        	my @sample = @{$samples{$it}};
-        	generateFasta(\@sample,$it,$reads,\@ids,$fgmpdir);  # generate for blast $it.fa
-        	
-		my %makers = runBlastx("$reads.sampled.$it.fa",$protein,$threads);
-        	my %new = compare(\%makers, \%markersFound);
-		
-		my $new = scalar (keys %new);
-        	my $previous = scalar (keys %markersFound);
+    my %samples = reservoir_sampling(@ids);
 
-        	if ($new < ($previous * 0.1)){
-                	$trials++;
-                	warn"...only $new markers found - thresold not satisfied - attempt # $trials / 20\n";
-        	} else {
-                	warn"...new markers found:\t$new ( previous $previous)";
-      		  }
-        	# update %markerFound
-        	# becareful will erase previous data but
-        	my $t = "";
-		foreach $t ( keys %makers ) {
-                	$markersFound{$t} = $makers{$t}
-        		}
-        	last if ($trials == 20);
+    my %markersFound = ();
+    my $it = "";
+    my $trials = 0;
+
+    foreach $it ( keys %samples) {
+	my @sample = @{$samples{$it}};
+	generateFasta(\@sample,$it,$reads,\@ids,$fgmpdir); # generate for blast $it.fa
+
+	my $markers = runBlastx("$reads.sampled.$it.fa",$protein,$threads);
+	my %new = compare($markers, \%markersFound);
+
+	my $new = scalar (keys %new);
+	my $previous = scalar (keys %markersFound);
+
+	if ($new < ($previous * 0.1)){
+	    $trials++;
+	    warn"...only $new markers found - thresold not satisfied - attempt # $trials / 20\n";
+	} else {
+	    warn"...new markers found:\t$new ( previous $previous)";
 	}
-	my $founds = scalar (keys %markersFound);
-	return($founds);
+	# update %markerFound
+	# becareful will erase previous data but
+	my $t = "";
+	foreach $t ( keys %makers ) {
+	    $markersFound{$t} = $makers{$t}
+	}
+	last if ($trials == 20);
+    }
+    my $founds = scalar (keys %markersFound);
+    return($founds);
 }
 
 sub compare {
@@ -422,88 +457,87 @@ sub compare {
 }
 
 sub runBlastx {
-        my ($query,$target,$threads) = @_;
-        execute("blastx -db $target -query $query -evalue 0.01 -num_threads $threads -outfmt 6 -max_target_seqs 1 -out $query.blastx");
-	my %founds = extractMarkers("$query.blastx");
-        return(%founds);
+    my ($query,$target,$threads) = @_;
+    #AUDIT: this exe needs to be specified in a config variable
+    #AUDIT: support caching and/or on the fly parsing instead ??
+    execute("blastx -db $target -query $query -evalue 0.01 -num_threads $threads -outfmt 6 -max_target_seqs 1 -out $query.blastx");
+    return extractMarkers("$query.blastx");
 }
+
 sub extractMarkers {
-        my %h = ();
-        my $blastx = io(@_);
-           $blastx->autoclose(0);
-           while ( my $bl = $blastx->getline || $blastx->getline ) {
-           chomp $bl;
-                my @dat = split /\t/,$bl;
-                my ($q,$s,$eval) = ($dat[0],$dat[1],$dat[10]);
+    my $blastx = io(@_);
+    $blastx->autoclose(0);
+    my $h = {};
+    while ( my $bl = $blastx->getline || $blastx->getline ) {
+	chomp $bl;
+	my @dat = split(/\t/,$bl);
+	my ($q,$s,$evalue) = ($dat[0],$dat[1],$dat[10]);
 
-                if ($h{$s}) {
-                        my @tmp = @{$h{$s}};
-                        unless ($eval > $tmp[1]){
-                                @{$h{$s}} = ($q,$eval);
-                        }
-                } else {
-                        @{$h{$s}} = ($q,$eval);
-                }
-        }
-        return(%h);
+	# if already stored this hit, skip unless evalue is worse than best
+	# seen one
+	next if( exists $h->{$s} && $evalue > $h->{$s}->[1] );
+	$h->{$s} = [$q,$evalue];
+    }
+    $h;
 }
+
 sub generateFasta {
-        my ($list,$iteration,$readsFile,$ids,$dir) = @_;
+    my ($list,$iteration,$readsFile,$ids,$dir) = @_;
 
-        my @ids = @$ids;
+    my $buffer = "";
+    foreach my  $id ( @$list ) {
+	my @clean = split /\s+/,$ids->[$id];	
+	$buffer .="$clean[0]\n";
+    }
+    io("$iteration.tmp")->write($buffer);
 
-        my $buffer = "";
-        my $id = "";
-        foreach $id ( @$list ) {
-		my @clean = split /\s+/,$ids[$id];
-                #$buffer .="$ids[$id]\n";
-		$buffer .="$clean[0]\n";
-        }
-        io("$iteration.tmp")->write($buffer);
-        execute("perl $dir/src/retrieveFasta.pl $iteration.tmp $readsFile > $readsFile.sampled.$iteration.fa");
-        #execute("rm $iteration.tmp");
+    # AUDIT - make this a routine!
+    execute("perl $dir/src/retrieveFasta.pl $iteration.tmp $readsFile > $readsFile.sampled.$iteration.fa");
+    #execute("rm $iteration.tmp");
 }
+
 sub reservoir_sampling {
-        my (@list) = @_;
-        
-	my %samples = ();
+    my (@list) = @_;
 
-        my $num_of_samples = '1000';
-        my $sample_size = '10000';
-        my $counter = 1;
-	my $num_seqs = scalar (@list);
+    my %samples = ();
 
-        while ( $counter < ($num_of_samples + 1)){
-         my @sampled = (1 .. $sample_size);
-         for my $j ( $sample_size + 1 .. $num_seqs) {
-                 $sampled[ rand(@sampled) ] = $j if rand() <= ($sample_size / $j)
-                }
+    my $num_of_samples = '1000';
+    my $sample_size = '10000';
+    my $counter = 1;
+    my $num_seqs = scalar (@list);
+
+    while ( $counter < ($num_of_samples + 1)){
+	my @sampled = (1 .. $sample_size);
+	for my $j ( $sample_size + 1 .. $num_seqs) {
+	    $sampled[ rand(@sampled) ] = $j if rand() <= ($sample_size / $j)
+	}
 
         my $tmp = "";
         my @buf = ();
         foreach $tmp ( @sampled ) {
-                push(@buf, $tmp);
+	    push(@buf, $tmp);
         }
 
         @{$samples{"s.$counter"}} = @buf;
         $counter++;
-        }
-        return(%samples);
+    }
+    return(%samples);
 }
 
 sub load {
-        my @array = ();
-        my $f = io(@_);
-          $f->autoclose(0);
-          while ( my $fl = $f->getline || $f->getline){
-          chomp $fl;
-                if ( $fl =~ m/^>/){
-                        $fl =~s/>//;
-                        push(@array, $fl);
-                }
-        }
-        return(@array);
+    my @array = ();
+    my $f = io(@_);
+    $f->autoclose(0);
+    while ( my $fl = $f->getline || $f->getline){
+	chomp $fl;
+	if ( $fl =~ m/^>/ ){
+	    $fl =~ s/>//;
+	    push(@array, $fl);
+	}
+    }
+    return(@array);
 }
+
 1;
 
 

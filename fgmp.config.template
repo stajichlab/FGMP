@@ -1,3 +1,10 @@
 # paths
-FGMP=$(pwd)
-WRKDIR=$(pwd)/sample
+FGMP=
+WRKDIR=$FGMP/sample
+BLASTX=blastx
+EXONERATE=exonerate
+SIXPACK=sixpack
+HMMER=hmmsearch
+TBLASTN=tblastn
+MAKEBLASTDB=makeblastdb
+AUGUSTUSPATH=augustus-3.0.3

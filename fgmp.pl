@@ -62,11 +62,12 @@ if (-e 'fgmp.config'){
 
 # getOptions variables
 
+# these are global variables for the script
 my ($genome,$protein,$output,$blastdb,$hmm_profiles,
-$hmm_prefix,$cutoff_file,$mark_file,$fuces_hmm,
-$fuces_prefix,$tag,$reads,$verbose_str,$verbose_flg,
-$quiet_flg,$temp_flg,$help_flg,$threads,
-$augTraingCutoff);
+    $hmm_prefix,$cutoff_file,$mark_file,$fuces_hmm,
+    $fuces_prefix,$tag,$reads,$verbose_str,$verbose_flg,
+    $quiet_flg,$temp_flg,$help_flg,$threads,
+    $augTraingCutoff);
 
 my ($threads,$augTrainingCutff) =  (4,50);
 
@@ -125,9 +126,10 @@ if (defined ($threads) && ($threads >= 2)){
 unless (-e "$genome.candidates.fa.p2g") {
 
     # chunk the candate regions and runn exonerate in parallel # for speed
-    if (defined ($threads) && ($threads >= 2)){
+    if (defined ($threads) && ($threads >= 2) ){
 	my ($nb_seqs,$nb_chunk,$nb_seq_per_chunk,$fastaJobs,
-	    $exonerateJobs) = FGMP::multithread_exonerate("$genome.candidates.fa","$threads","$protein","$FGMP/src",$WRKDIR);
+	    $exonerateJobs) = FGMP::multithread_exonerate("$genome.candidates.fa",$threads,
+							  $protein,"$FGMP/src",$WRKDIR);
 
 	&report("CMD:LAUNCHING MULTI-THREAD EXONERATE\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqs\n\tNB OF CHUNKs: $nb_chunk\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunk");
 
@@ -188,6 +190,7 @@ push (@clean, "$WRKDIR/$genome.candidates.fa",
 #AUDIT consider parameterizing the exe path as variable instead of putting
 #      it in here. also makes new version install/upgrade easier
 FGMP::execute("perl $FGMP/utils/augustus-3.0.3/scripts/exonerate2hints.pl --in=$WRKDIR/$genome.candidates.fa.p2g --out=$WRKDIR/$genome.trainingSet");
+
 FGMP::execute("perl $FGMP/utils/augustus-3.0.3/scripts/gff2gbSmallDNA.pl $WRKDIR/$genome.trainingSet $WRKDIR/$genome 100 $WRKDIR/$genome.trainingSet.gb");
 
 #AUDIT rewrite for better english and readability - "count_genbank_loci":

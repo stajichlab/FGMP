@@ -47,12 +47,8 @@ my $VERSION = "1.0";
 my @clean = ();
 
 # loading paths
-my ($FGMP,$WRKDIR,$TMP) = ("","","");
-if (-e 'fgmp.config'){
-	  ($FGMP,$WRKDIR,$TMP) = Fgmp::load_paths('fgmp.config');
-} else { 
-	croak "$0 requires config file: fgmp.config\n";
-}
+croak( "$0 requires config file: fgmp.config\n") unless ( -e 'fgmp.config');
+my ($FGMP,$WRKDIR,$TMP) = FGMP::load_paths('fgmp.config');
 
 # ----------------------------------- #
 # 	READING OPTIONS
@@ -66,17 +62,15 @@ if (-e 'fgmp.config'){
 my ($genome,$protein,$output,$blastdb,$hmm_profiles,
     $hmm_prefix,$cutoff_file,$mark_file,$fuces_hmm,
     $fuces_prefix,$tag,$reads,$verbose_str,$verbose_flg,
-    $quiet_flg,$temp_flg,$help_flg,$threads,
-    $augTraingCutoff);
-
-my ($threads,$augTrainingCutff) =  (4,50);
+    $quiet_flg,$temp_flg,$help_flg);
+my ($threads,$augTrainingCutoff) =  (4,50);
 
 # Reading options
 &which_Options(); 
 
 if ( ! $genome && $reads){
     my $makersInReads = FGMP::search_in_reads($reads,$protein,
-					      $FGMP,$threads);
+					       $FGMP,$threads);
     my $buf .= "# no. of reads detected:\t$makersInReads\n";
     io("$reads.SEARCH_IN_READS.report")->write($buf);
     &fgmp_die("#\tstop here -- only reads provided, no genome!");
@@ -84,7 +78,6 @@ if ( ! $genome && $reads){
 
 # Reading options
 &which_Options();
-
 
 # ----------------------------------- #
 # 	CHECKS
@@ -196,11 +189,11 @@ FGMP::execute("perl $FGMP/utils/augustus-3.0.3/scripts/gff2gbSmallDNA.pl $WRKDIR
 #AUDIT rewrite for better english and readability - "count_genbank_loci":
 my $numOfGenesIngb = FGMP::how_many_locus("$genome.trainingSet.gb");
 
-if ($numOfGenesIngb >= $augTraingCutoff) {
+if ($numOfGenesIngb >= $augTrainingCutoff) {
 
 #AUDIT consider parameterizing the exe path as variable instead of putting
 #      it in here
-    FGMP::execute("perl $FGMP/utils/augustus-3.0.3/scripts/randomSplit.pl $genome.trainingSet.gb $augTraingCutoff");
+    FGMP::execute("perl $FGMP/utils/augustus-3.0.3/scripts/randomSplit.pl $genome.trainingSet.gb $augTrainingCutoff");
 
 #AUDIT use perl only option instead of relying on system rm call?
     # check if this dir already exists then erase if there
@@ -382,7 +375,7 @@ sub run_find_candidate_regions {
 
 sub report {
     for my $msg ( @_ ) {
-	warn "###\t$mesg\n";
+	warn "###\t$msg\n";
     }
 }
 
@@ -408,7 +401,7 @@ sub which_Options {
 	"tmp"			=> \$temp_flg, # keep tempory files
 	"h|help|?"		=> \$help_flg, # print help
 	"T|threads=i"		=> \$threads,  # number of threads 
-	"A|augTraingCutoff=i"	=> \$augTraingCutoff,
+	"A|augTrainingCutoff=i"	=> \$augTrainingCutoff,
 	) || &show_help(); 
     &show_help if $help_flg;
 
@@ -440,7 +433,7 @@ sub which_Options {
     $tag	     = "OMA" unless defined($tag);
     $verbose_str     = " -v " if $verbose_flg; #AUDIT can this be a flag? unclear why passing this way
     $threads         = 4 unless defined $threads;
-    $augTraingCutoff = 50 unless defined $augTraingCutoff;
+    $augTrainingCutoff = 50 unless defined $augTrainingCutoff;
 }
 
 sub fgmp_die {

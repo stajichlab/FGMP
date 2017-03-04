@@ -73,17 +73,16 @@ my ($threads,$augTrainingCutff) =  (4,50);
 # Reading options
 &which_Options(); 
 
-if (!($genome) && ($reads)){
-	my $makersInReads = FGMP::search_in_reads($reads,$protein,
-						  $FGMP,$threads);
-	my $buf .="# no. of reads detected:\t$makersInReads\n";
-	io("$reads.SEARCH_IN_READS.report")->write($buf);
-	&die("#\tstop here -- only reads provided, no genome!");
+if ( ! $genome && $reads){
+    my $makersInReads = FGMP::search_in_reads($reads,$protein,
+					      $FGMP,$threads);
+    my $buf .= "# no. of reads detected:\t$makersInReads\n";
+    io("$reads.SEARCH_IN_READS.report")->write($buf);
+    &fgmp_die("#\tstop here -- only reads provided, no genome!");
 }
 
 # Reading options
 &which_Options();
-
 
 
 # ----------------------------------- #
@@ -411,11 +410,11 @@ sub which_Options {
     &show_help if $help_flg;
 
     # check if files exists
-    &die("FATAL ERROR!!! --genome or --blastdb not specified")
+    &fgmp_die("FATAL ERROR!!! --genome or --blastdb not specified")
 	unless (defined($genome) || defined($blastdb) || defined($reads));
 
     # need to check here that the $genome is in the correct fasta format
-    #&die("FATAL ERROR!!! --verbose and --quiet are mutually exclusive")
+    #&fgmp_die("FATAL ERROR!!! --verbose and --quiet are mutually exclusive")
     #	if ($verb_flg && $quiet_flg);
 
 
@@ -441,7 +440,7 @@ sub which_Options {
     $augTraingCutoff = 50 unless defined $augTraingCutoff;
 }
 
-sub die() {
+sub fgmp_die {
 	warn "@_\n"; # need to added cleaning stuff here
 	say "\n#####\nEnding FGMP";
 	exit(1);

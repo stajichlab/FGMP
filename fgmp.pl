@@ -101,13 +101,14 @@ croak "ERROR:\tNUM OF CPUS REQUESTED: More threads ($threads) than available CPU
 # FIND CANDIDATE REGIONS IN THE GENOME
 # ----------------------------------- #
 &report("INFO\tfinding candidate regions - TBLASTN");
+
 unless (-e "$genome.candidates.fa"){
-	&run_find_candidate_regions("$WRKDIR/$genome",$protein,$threads);
+    &run_find_candidate_regions("$WRKDIR/$genome",$protein,$threads);
 }
 
 # Implements sixpack to translate from candidate regions, because exonerate miss some regions
 if (defined ($threads) && ($threads >= 2)){
-	FGMP::split_and_run_sixpack("$genome.candidates.fa");
+    FGMP::split_and_run_sixpack("$genome.candidates.fa");
 }
 
 # ----------------------------------- #
@@ -368,9 +369,9 @@ sub run_find_candidate_regions {
     #AUDIT can be single mem ref passed around?
     #AUDIT - will you cache tblastn results to speed up on subsequent re-runs? 
     #AUDIT - if not - run it and have output parsed on the fly to avoid creating the file?
-    my (%adjusted) = FGMP::extractCandidateRegion("$genome_file.tblastn");	
+    my $adjusted = FGMP::extractCandidateRegion("$genome_file.tblastn");	
     
-    FGMP::exportCandidateRegions(\%adjusted,$genome_file);
+    FGMP::exportCandidateRegions($adjusted,$genome_file);
 }
 
 sub report {

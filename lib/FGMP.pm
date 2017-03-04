@@ -28,6 +28,8 @@ our %COMPRESS = ( 'gz' => 'gzip -c',
 @EXPORT = qw(&debug %DECOMPRESS %COMPRESS);
 @EXPORT_OK = qw(&debug $DEBUG);
 
+our $Region_Window = 5000000;
+
 sub parse_config {
     my $config = shift;
     my $apps = {};
@@ -327,69 +329,51 @@ sub execute_and_returnWhendone {
 	return($st);
 }
 
+# AUDIT - I do not understand what this function is meant to do
 sub extractCandidateRegion {
-	my ($tblastn) = @_; 
+    my ($tblastn_report) = @_; 
 
-	my %h1 = ();
-	my @locations = (); 
-	
-	my $tb = io("$tblastn");
-	   $tb->autoclose(0); 
-	   while( my $tbline = $tb->getline || $tb->getline){
-	   chomp $tbline; 
-		next if $tbline =~ m/^#/;
-		my @datatb = split /\t/, $tbline; 
-		my ($target,$sstart,$send) = ($datatb[0],$datatb[1],$datatb[2]); 
-		
-		if ($sstart > $send) { # reverse
-			my $rsstart = $send;
-			my $rsend   = $sstart;
-			push(@locations,$rsstart,$rsend);
-			@{$h1{$target}} = @locations;
-		} else {
-			push(@locations,$sstart,$send); 
-			@{$h1{$target}} = @locations;
-		}
-		
-		# See it before
-		if (exists ($h1{$target})){
-			# add new HSPs
-			my @range = @{$h1{$target}};
-			# update
-			push(@range, $sstart,$send);
-			@{$h1{$target}} = @range
-		} else {
-			@{$h1{$target}} = @locations;
-		}
-		@locations = (); 
+    my %h1 = ();
+    my @locations = (); 
+
+    my $tb = io($tblastn_report);
+    $tb->autoclose(0); 
+    #AUDIT confused why you double call getline...
+    while( my $tbline = $tb->getline || $tb->getline) {
+	chomp $tbline; 
+	next if $tbline =~ m/^#/;
+	my ($target,$sstart,$send) = split /\t/, $tbline; 
+	# make sure start < end
+	($sstart,$send) = sort { $a <=> $b } ($sstart,$send);
+
+	# See it before
+	if (exists $h1{$target} ){
+	    push @{$h1{$target}}, ($sstart,$send);
+	} else {
+	    $h1{$target} = [$sstart,$send];
+	}
+    }
+
+    # compute the borders
+    my $boundaries = {};
+    # walk through each target
+    foreach my $el (keys %h1){
+	my $startBoundaries = "";
+
+	# meaning that 5000 (5kb) extends the end of the contig
+	if (min (@{$h1{$el}}) < $Region_Window){
+	    $startBoundaries = 0;
+	} else {
+	    $startBoundaries = (min(@{$h1{$el}}) - $Region_Window);	       
 	}
 
-	# compute the borders
-	my %boundaries = ();
-	my @bounds = (); 
+	# you might need the size of the contig
+        # AUDIT - do you need to make sure this is less than the contig width??
+	my $endBoundaries = (max(@{$h1{$el}}) + $Region_Window);
 
-	my $el = ""; 
-	foreach $el (keys %h1){
-		my $startBoundaries = "";
-		
-		# meaning that 5000 (5kb) extends the end of the contig
-		if (min(@{$h1{$el}}) < 5000000){
-			$startBoundaries = 0;
-		} else {
-			$startBoundaries = (min(@{$h1{$el}}) - 5000000);
-		}
-		
-		# you might need the size of the contig
-		my $endBoundaries = (max(@{$h1{$el}}) + 5000000);
-
-		# populating the hash
-		push(@bounds,$startBoundaries,$endBoundaries);		 
-		@{$boundaries{$el}} = @bounds;
-
-		# cleaning @bounds 
-		@bounds = ();
-	} 
-	return (%boundaries);
+	push @{$boundaries->{$el}}, ($startBoundaries,$endBoundaries);
+    } 
+    $boundaries;
 }
 
 sub exportCandidateRegions {

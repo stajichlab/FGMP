@@ -90,14 +90,19 @@ if (!($genome) && ($reads)){
 # 	CHECKS
 # ----------------------------------- #
 # check if the softs are installed - TODO: catch nicely the die message
+# AUDIT This should be replaced with path of these tool set in config file
 foreach my $soft ( qw ( makeblastdb tblastn exonerate hmmsearch sixpack csplit )){
-	my $full_path = can_run($soft) || croak "$soft is not installed\n";	
+    my $full_path = can_run($soft) || croak "$soft is not installed\n";	
 }
 
 # check that the no. of cpus requested are available
+# AUDIT this is fragile code- not all systems have nproc - consider module or better
+# AUDIT bullet-proofing of this code
 my $nb_cpus_on_system = `nproc`;
 chomp $nb_cpus_on_system;
-croak "ERROR:\tNB OF CPUS REQUESTED: $threads is superior to nb. of cpus available on this system ($nb_cpus_on_system)" unless ($threads <= $nb_cpus_on_system);
+
+croak "ERROR:\tNUM OF CPUS REQUESTED: More threads ($threads) than available CPUS ($nb_cpus_on_system)" 
+    if ($threads > $nb_cpus_on_system);
 
 # ----------------------------------- #
 # FIND CANDIDATE REGIONS IN THE GENOME

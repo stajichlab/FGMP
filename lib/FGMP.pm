@@ -1,6 +1,6 @@
 # This module is a set of system resoures for FGMP
 
-package Fgmp;
+package FGMP;
 use strict; 
 use warnings;
 
@@ -13,21 +13,45 @@ use Data::Dumper;
 use List::Util qw(max min);
 use Bio::SeqIO;
 
-sub load_paths {
-    my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
-    my $paths = io(@_);
-    $paths->autoclose(0);
-    while (my $lp = $paths->getline || $paths->getline){
-	chomp $lp;
-	next if $lp =~ m/^#/;
-	($fmpdir) = $lp if ( $lp =~ m/FGMP=/);
-	$fmpdir =~s/FGMP=//;
-	($wrkdir) = $lp if ( $lp =~ m/WRKDIR=/);
-	$wrkdir =~s/WRKDIR=//;
-	($tmpdir) = $lp if ( $lp =~ m/TMP=/);
-	$tmpdir =~s/TMP=//;
+use vars qw(@ISA @EXPORT @EXPORT_OK);
+require Exporter;
+@ISA = qw(Exporter);
+
+our $DEBUG = 0;
+our %DECOMPRESS = ( 'gz' => 'zcat',
+		   'bz2' => 'bzcat' );
+
+our %COMPRESS = ( 'gz' => 'gzip -c',
+		 'bz2' => 'bzip2 -c' );
+
+
+@EXPORT = qw(&debug %DECOMPRESS %COMPRESS);
+@EXPORT_OK = qw(&debug $DEBUG);
+
+sub parse_config {
+    my $config = shift;
+    my $apps = {};
+    open(my $fh => $config) || die "cannot open $config: $!";
+    while(<$fh>) {
+	chomp;
+	if(/([^=]+)=(\S+)/ ) {	
+	    $apps->{$1} = $2;
+	} else {
+	    warn("cannot parse line $_\n");
+	}
     }
-    return($fmpdir,$wrkdir,$tmpdir);
+    if( $DEBUG ) {
+	while( my ($app,$path) = each %$apps ) {
+	    debug("app is $app with path = $path\n");
+	}
+    }
+    $apps;
+}
+
+sub get_fasta {
+    my ($ids,$file) = shift @_;
+
+    $fasta;
 }
 
 sub count_num_of_seqs {
@@ -108,159 +132,158 @@ sub split_and_run_sixpack {
 }
 
 sub transeq {
-	 my ($multifasta1) = @_;
-	
-	execute("transeq -clean -frame 6 -trim -sequence $multifasta1 -outseq $multifasta1.translated"); 
+    my ($multifasta1) = @_;
+    execute("transeq -clean -frame 6 -trim -sequence $multifasta1 -outseq $multifasta1.translated"); 
 
 
 }
+
 sub multithread_exonerate {
-	my ($candidateFasta, $cpuAvail, $proteins, $srcdir,$outdir) = @_;
+    my ($candidateFasta, $cpuAvail, $proteins, $srcdir,$outdir) = @_;
 
-	my $elementTmp = ""; 
-	my @allChunks = ();
-	my @runs_fas = ();
-	my @run_exo = (); 
+    my $elementTmp = ""; 
+    my @allChunks = ();
+    my @runs_fas = ();
+    my @run_exo = (); 
 
-	my @cmd = ();
+    my @cmd = ();
 
-	my @seqs = extractSeqname($candidateFasta);
-	my $numOfseqs = scalar(@seqs);
-	my $numOfChunks = $cpuAvail;
-	my $numOfseqPerChunks = sprintf("%.0f",($numOfseqs / $numOfChunks)); 
-	
-	my $i = 0;
-	# don't worry I catch it here 
-	# the problem with this is that it will print 10 chunk of 8 seqs, but miss one seq
+    my @seqs = extractSeqname($candidateFasta);
+    my $numOfseqs = scalar(@seqs);
+    my $numOfChunks = $cpuAvail;
+    my $numOfseqPerChunks = sprintf("%.0f",($numOfseqs / $numOfChunks)); 
 
-	# hey this might bug if there more cpus than candidate, then the ratio will be less than 1	
+    my $i = 0;
+    # don't worry I catch it here 
+    # the problem with this is that it will print 10 chunk of 8 seqs, 
+    # but miss one seq
+    # hey this might bug if there more cpus than candidate, 
+    then the ratio will be less than 1	
 	while ((@seqs) > 1){
-		my @chunk = splice(@seqs,1,$numOfseqPerChunks);
-		my $chunk = join("\t", @chunk);
-		push(@allChunks,$chunk);		
-		}
+	    my @chunk = splice(@seqs,1,$numOfseqPerChunks);
+	    my $chunk = join("\t", @chunk);
+	    push(@allChunks,$chunk);		
+    }
 
-	# catch the remaining in case of impair numer
-		my $impair = join("",@seqs);
+    # catch the remaining in case of impair numer
+    my $impair = join("",@seqs);
 
-	# now adding the first element of the list
-	unless (!defined($impair)){	
-		# replacing the first element
-		my $newFirstElement = "$allChunks[0]\t$impair";
-		$allChunks[0] = $newFirstElement;
+    # now adding the first element of the list
+    unless (!defined($impair)){	
+	# replacing the first element
+	my $newFirstElement = "$allChunks[0]\t$impair";
+	$allChunks[0] = $newFirstElement;
+    }
+
+    # now create chunk files
+    my $chk = ""; 
+    my $count = 0;
+
+    my @chunksForFastaExtr = (); 
+
+    # each element of @allChunks is >sca1\t$scaf2 etc...
+    foreach $chk (@allChunks){
+	my @dataC = split /\t/, $chk;
+
+	my $chktmp = "";
+	my $chkind = ""; 
+	foreach $chkind (@dataC){
+	    $chkind =~s/>//;
+	    $chktmp .="$chkind\n";
 	}
-	
-	# now create chunk files
-	my $chk = ""; 
-	my $count = 0;
+	io("$candidateFasta.chunk$count.tmp")->write($chktmp);
+	push(@chunksForFastaExtr,"$candidateFasta.chunk$count.tmp"); 
+	$count++;
+    }
 
-	my @chunksForFastaExtr = (); 
-	 
-	# each element of @allChunks is >sca1\t$scaf2 etc...
-	foreach $chk (@allChunks){
-		my @dataC = split /\t/, $chk;
-		
-		my $chktmp = "";
-		my $chkind = ""; 
-		foreach $chkind (@dataC){
-			$chkind =~s/>//;
-			$chktmp .="$chkind\n";
-		}
-		io("$candidateFasta.chunk$count.tmp")->write($chktmp);
-		push(@chunksForFastaExtr,"$candidateFasta.chunk$count.tmp"); 
-		$count++;
-	}
-	
-	# now extract fasta seq for these chunk 
-	# and launch exonerate
-	my $ext = ""; 
-	foreach $ext (@chunksForFastaExtr){
+    # now extract fasta seq for these chunk 
+    # and launch exonerate
+    my $ext = ""; 
+    foreach $ext (@chunksForFastaExtr){
+	# AUDIT: this needs to be re-written to not depend this way
+	# You need to update the path later
+	open(my $outseq => ">$outdir/$ext.fas");
 
-	    # AUDIT: this needs to be re-written to not depend this way
+	push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
 
-	    # You need to update the path later
-	    open(my $outseq => ">$outdir/$ext.fas");
-	    
-	    push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
-	    
-	    push(@run_exo,"exonerate --model protein2genome --percent 5 -q $proteins --showtargetgff Y -t $outdir/$ext.fas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $outdir/$ext.p2g");
+	push(@run_exo,"exonerate --model protein2genome --percent 5 -q $proteins --showtargetgff Y -t $outdir/$ext.fas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $outdir/$ext.p2g");
 
-	}
-	return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@runs_fas,\@run_exo);
+    }
+    return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@runs_fas,\@run_exo);
 }
 
 sub multithread_augustus {
-        my ($candidateFasta, $cpuAvail, $proteins, 
-	    $srcdir, $augdir,$outdir,$speciestag) = @_;
+    my ($candidateFasta, $cpuAvail, $proteins, 
+	$srcdir, $augdir,$outdir,$speciestag) = @_;
 
-        my $elementTmp = "";
-        my @allChunks = ();
-        my @runs_fas = ();
-        my @run_aug = ();
-	my @run_gff2aa = ();
-	my @toconcat = ();
-	
-        my @cmd = ();
+    my $elementTmp = "";
+    my @allChunks = ();
+    my @runs_fas = ();
+    my @run_aug = ();
+    my @run_gff2aa = ();
+    my @toconcat = ();
 
-        my @seqs = extractSeqname($candidateFasta);
-        my $numOfseqs = scalar(@seqs);
-        my $numOfChunks = $cpuAvail;
-        my $numOfseqPerChunks = sprintf("%.0f",($numOfseqs / $numOfChunks));
+    my @cmd = ();
 
-        my $i = 0;
-        # don't worry I catch it here
-        # the problem with this is that it will print 10 chunk of 8 seqs, but miss one seq
+    my @seqs = extractSeqname($candidateFasta);
+    my $numOfseqs = scalar(@seqs);
+    my $numOfChunks = $cpuAvail;
+    my $numOfseqPerChunks = sprintf("%.0f",($numOfseqs / $numOfChunks));
 
-        # hey this might bug if there more cpus than candidate, then the ratio will be less than 1
-        while ((@seqs) > 1){
-                my @chunk = splice(@seqs,1,$numOfseqPerChunks);
-                my $chunk = join("\t", @chunk);
-                push(@allChunks,$chunk);
-                }
+    my $i = 0;
+    # don't worry I catch it here
+    # the problem with this is that it will print 10 chunk of 8 seqs, but miss one seq
 
-        # catch the remaining in case of impair numer
-                my $impair = join("",@seqs);
+    # hey this might bug if there more cpus than candidate, then the ratio will be less than 1
+    while ((@seqs) > 1){
+	my @chunk = splice(@seqs,1,$numOfseqPerChunks);
+	my $chunk = join("\t", @chunk);
+	push(@allChunks,$chunk);
+    }
 
-        # now adding the first element of the list
-        unless (!defined($impair)){
-                # replacing the first element
-                my $newFirstElement = "$allChunks[0]\t$impair";
-                $allChunks[0] = $newFirstElement;
-        }
+    # catch the remaining in case of impair numer
+    my $impair = join("",@seqs);
 
-        # now create chunk files
-        my $chk = "";
-        my $count = 0;
+    # now adding the first element of the list
+    unless (!defined($impair)){
+	# replacing the first element
+	my $newFirstElement = "$allChunks[0]\t$impair";
+	$allChunks[0] = $newFirstElement;
+    }
 
-        my @chunksForFastaExtr = ();
+    # now create chunk files
+    my $chk = "";
+    my $count = 0;
 
-        # each element of @allChunks is >sca1\t$scaf2 etc...
-        foreach $chk (@allChunks){
-                my @dataC = split /\t/, $chk;
+    my @chunksForFastaExtr = ();
 
-                my $chktmp = "";
-                my $chkind = "";
-                foreach $chkind (@dataC){
-                        $chkind =~s/>//;
-                        $chktmp .="$chkind\n";
-                }
-                io("$candidateFasta.chunk$count.tmp")->write($chktmp);
-                push(@chunksForFastaExtr,"$candidateFasta.chunk$count.tmp");
-                $count++;
-        }
+    # each element of @allChunks is >sca1\t$scaf2 etc...
+    foreach $chk (@allChunks){
+	my @dataC = split /\t/, $chk;
 
-        # now extract fasta seq for these chunk
-        # and launch exonerate
-        my $ext = "";
-        foreach $ext (@chunksForFastaExtr){
-                # You need to update the path later
-            #    push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
-		push(@run_aug,"$augdir/bin/augustus --species=$speciestag --AUGUSTUS_CONFIG_PATH=$augdir/config $outdir/$ext.fas > $outdir/$ext.gff");
-       		push(@run_gff2aa,"$augdir/scripts/getAnnoFasta.pl $outdir/$ext.gff");
-		push(@toconcat,"$outdir/$ext.aa");
-	 }
-        #return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@runs_fas,\@run_aug,\@run_gff2aa);
-	return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@run_aug,\@run_gff2aa,\@toconcat);
+	my $chktmp = "";
+	my $chkind = "";
+	foreach $chkind (@dataC){
+	    $chkind =~s/>//;
+	    $chktmp .="$chkind\n";
+	}
+	io("$candidateFasta.chunk$count.tmp")->write($chktmp);
+	push(@chunksForFastaExtr,"$candidateFasta.chunk$count.tmp");
+	$count++;
+    }
+
+    # now extract fasta seq for these chunk
+    # and launch exonerate
+    my $ext = "";
+    foreach $ext (@chunksForFastaExtr){
+	# You need to update the path later
+	#    push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $outdir/$candidateFasta > $outdir/$ext.fas");
+	push(@run_aug,"$augdir/bin/augustus --species=$speciestag --AUGUSTUS_CONFIG_PATH=$augdir/config $outdir/$ext.fas > $outdir/$ext.gff");
+	push(@run_gff2aa,"$augdir/scripts/getAnnoFasta.pl $outdir/$ext.gff");
+	push(@toconcat,"$outdir/$ext.aa");
+    }
+    #return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@runs_fas,\@run_aug,\@run_gff2aa);
+    return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@run_aug,\@run_gff2aa,\@toconcat);
 }
 
 sub extractSeqname{

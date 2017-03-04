@@ -50,8 +50,8 @@ sub parse_config {
 
 sub get_fasta {
     my ($ids,$file) = shift @_;
-
-    $fasta;
+    
+    # $fasta;
 }
 
 sub count_num_of_seqs {
@@ -158,11 +158,11 @@ sub multithread_exonerate {
     # the problem with this is that it will print 10 chunk of 8 seqs, 
     # but miss one seq
     # hey this might bug if there more cpus than candidate, 
-    then the ratio will be less than 1	
-	while ((@seqs) > 1){
-	    my @chunk = splice(@seqs,1,$numOfseqPerChunks);
-	    my $chunk = join("\t", @chunk);
-	    push(@allChunks,$chunk);		
+    # then the ratio will be less than 1	
+    while ( @seqs > 1 ) {
+	my @chunk = splice(@seqs,1,$numOfseqPerChunks);
+	my $chunk = join("\t", @chunk);
+	push(@allChunks,$chunk);		
     }
 
     # catch the remaining in case of impair numer
@@ -432,7 +432,7 @@ sub search_in_reads {
 
     my %samples = reservoir_sampling(@ids);
 
-    my %markersFound = ();
+    my $markersFound = {};
     my $it = "";
     my $trials = 0;
 
@@ -441,42 +441,36 @@ sub search_in_reads {
 	generateFasta(\@sample,$it,$reads,\@ids,$fgmpdir); # generate for blast $it.fa
 
 	my $markers = runBlastx("$reads.sampled.$it.fa",$protein,$threads);
-	my %new = compare($markers, \%markersFound);
+	my $newcount = compare($markers, $markersFound);
+	my $previous = scalar (keys %$markersFound);
 
-	my $new = scalar (keys %new);
-	my $previous = scalar (keys %markersFound);
-
-	if ($new < ($previous * 0.1)){
+	if ($newcount < ($previous * 0.1)){
 	    $trials++;
-	    warn"...only $new markers found - thresold not satisfied - attempt # $trials / 20\n";
+	    warn"...only $newcount markers found - thresold not satisfied - attempt # $trials / 20\n";
 	} else {
-	    warn"...new markers found:\t$new ( previous $previous)";
+	    warn"...new markers found:\t$newcount ( previous $previous)";
 	}
 	# update %markerFound
 	# becareful will erase previous data but
-	my $t = "";
-	foreach $t ( keys %makers ) {
-	    $markersFound{$t} = $makers{$t}
+	foreach my $t ( keys %$markers ) {
+	    $markersFound->{$t} = $markers->{$t}
 	}
 	last if ($trials == 20);
     }
-    my $founds = scalar (keys %markersFound);
-    return($founds);
+    
+    my $num_found = scalar (keys %$markersFound);
+    $num_found;
 }
 
 sub compare {
-        my ($h1,$h2) = @_;
-
-        my %h1 = %$h1;
-        my %h2 = %$h2;
-        my %new = ();
-        my ($m1,$m2) = ("","");
-        foreach $m1 ( keys %h1 ) {
-                unless ( $h2{$m1} ) {
-                        $new{$m1} = $h1{$m1};
-                }
-        }
-        return(%new);
+    my ($h1,$h2) = @_;
+    my %new = ();
+    foreach my $m1 ( keys %$h1 ) {
+	unless ( $h2->{$m1} ) {
+	    $new{$m1} = $h1->{$m1};
+	}
+    }
+    scalar keys %new;
 }
 
 sub runBlastx {

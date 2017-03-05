@@ -27,6 +27,87 @@
 #                                                                        #
 ##########################################################################
 
+# begin POD documentation
+
+=head1 NAME
+
+FGMP - Fungal Genome Mapping Project to evaluate genome completeness 
+
+=head1 USAGE
+
+FGMP [options] -g genome_fasta_file
+
+=head1 DESCRIPTION
+
+=head2 REQUIRES
+	
+FGMP requires the installations of the following software
+ - hmmer (HMMER 3.1) http://hmmer.org/ 
+ - NCBI blast+ ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+ - Exonerate See https://github.com/nathanweeks/exonerate/	
+ - BioPerl http://bioperl.org/
+ - IO::All
+ - EMBOSS sixpack & csplit - http://emboss.sourceforge.net/
+
+=head1 ENVIRONMENT VARIABLES
+
+	You can specific the path where FGMP can find the program files
+	with the shell variable "FGMP"
+
+
+	o Using a Bourne-SHell
+		export FGMP="path"
+		export FGMPTMP="path"
+		export PERL5LIB="$PERL5LIB:\$FGMP/lib" 
+
+	Check exonrate cmmd
+
+=head1 COMMAND-LINE OPTIONS
+
+		Available options and a short description are listed here; 
+
+	-g, --genome		genome in fasta format
+	
+	-p, --protein		protein seeds
+
+	-o, --output		output file prefix
+
+	-d, --blastdb		blast database for the genome sequence
+
+	-c, --cutoff_file	profiles cutoff file
+
+	-m, --mark_file		completeness markers
+
+	-r, --reads		reads
+
+	--fuces_hmm		fungal Ultra Conserved Elements (hmms)
+	
+	--fuces_prefix		fungal Ultra Conserved Elements (names - one per line please!)
+
+	-t, --tag		tag to use OMA for fgmp, FUNY (Funybase) or CEG (cegma)
+
+	-T, --threads		Specify the number of processor threads to use
+
+	-v, --verbose		show progress
+
+	-q, quiet		suppress show log
+
+	-h, --help		show this help
+
+	--tmp			keep temporary files
+
+	-augTraingCutoff	specify the num of genes for augustus training
+
+=head1 BUGS
+
+Please report bugs on GitHub https://github.com/stajichlab/FGMP/issues
+
+=head1 AUTHORS
+
+ Developed by Ousmane H. Cisse (@ocisse) and Jason E. Stajich (@hyphaltip).
+
+=cut
+
 use strict;
 use warnings;
 use feature 'say'; 
@@ -447,93 +528,6 @@ sub fgmp_die {
 #AUDIT simply a function that calls out `perldoc $0`
 
 sub show_help() {
-	open(HELP, "| cat");
-	print HELP <<"+++EndOfHelp+++";
-
-			$SOFTWARE
-
-SOFTWARE:
-
-		$SOFTWARE - $VERSION
-
-		xxxxxxxxxxxxxxx
-
-USAGE
-
-	$SOFTWARE [options] -g < genome_fasta_file
-
-DESCRIPTION
-
-REQUIRES
-	$SOFTWARE requieres the installations of the following softwares
-	
-	- hmmer (HMMER 3.0) 
-	- NCBI blast+
-	- Exonerate
-	- BioPerl xxx
-	- IO::All
-	- Emboss sixpack & csplit
-
-
-ENVIRONMENT VARIABLES
-	You can specific the path where the $SOFTWARE can find the default files
-	with the shell variable \"$SOFTWARE\".
-
-
-	o Using a Bourne-SHell
-		export FGMP="path"
-		export FGMPTMP="path"
-		export PERL5LIB="\$PERL5LIB:\$FGMP/lib" 
-
-	Check exonrate cmmd
-
-COMMAND-LINE OPTIONS
-
-		Available options and a short description are listed here; 
-
-	-g, --genome		genome in fasta format
-	
-	-p, --protein		protein seeds
-
-	-o, --output		output file prefix
-
-	-d, --blastdb		blast database for the genome sequence
-
-	-c, --cutoff_file	profiles cutoff file
-
-	-m, --mark_file		completeness markers
-
-	-r, --reads		reads
-
-	--fuces_hmm		fungal Ultra Conserved Elements (hmms)
-	
-	--fuces_prefix		fungal Ultra Conserved Elements (names - one per line please!)
-
-	-t, --tag		tag to use OMA for fgmp, FUNY (Funybase) or CEG (cegma)
-
-	-T, --threads		Specify the number of processor threads to use
-
-	-v, --verbose		show progress
-
-	-q, quiet		suppress show log
-
-	-h, --help		show this help
-
-	--tmp			keep temporary files
-
-	-augTraingCutoff	specify the num of genes for augustus training
-
-BUGS:
-	Please report bugs on GitHub https://github.com/stajichlab/FGMP/issues
-
-AUTHORS:
-
-	$SOFTWARE has been developped by Ousmane H. Cisse and Jason E. Stajich.
-
-
-
-GNU-GPL (C) 		date				 $SOFTWARE
-+++EndOfHelp+++
-	close (HELP);
-	exit(1);
+    system("perldoc $0");
+    exit(1);
 }

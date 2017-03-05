@@ -30,6 +30,23 @@ our %COMPRESS = ( 'gz' => 'gzip -c',
 
 our $Region_Window = 5000000;
 
+sub load_paths {
+	my ($fmpdir,$wrkdir,$tmpdir) = ("","","");
+	my $paths = io(@_);
+	   $paths->autoclose(0);
+	   while (my $lp = $paths->getline || $paths->getline){
+	   chomp $lp;
+		next if $lp =~ m/^#/;
+		   ($fmpdir) = $lp if ( $lp =~ m/FGMP=/);
+		    $fmpdir =~s/FGMP=//;
+		   ($wrkdir) = $lp if ( $lp =~ m/WRKDIR=/);
+		    $wrkdir =~s/WRKDIR=//;
+		   ($tmpdir) = $lp if ( $lp =~ m/TMP=/);
+		    $tmpdir =~s/TMP=//;
+	}
+	return($fmpdir,$wrkdir,$tmpdir);
+}
+
 sub parse_config {
     my $config = shift;
     my $apps = {};

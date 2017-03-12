@@ -1,10 +1,10 @@
 #!/usr/bin/env perl
 
 use strict; 
-use warnings;
 use Carp; 
 use feature 'say'; 
 use IO::All; 
+use warnings;
 
 my %IUPCA = ("Ala"=>"A","Asx"=>"B","Cys"=>"C","Asp"=>"D","Glu"=>"E","Phe"=>"F","Gly"=>"G","His"=>"H","Ile"=>"I","Lys"=>"K","Leu"=>"L","Met"=>"M","Asn"=>"N","Pro"=>"P","Gln"=>"Q","Arg"=>"R","Ser"=>"S","Thr"=>"T","Val"=>"V", "Trp" => "W", "Unk" => "X", "Tyr"=>"Y","Glx" => "Z");
 my %seqs = ();

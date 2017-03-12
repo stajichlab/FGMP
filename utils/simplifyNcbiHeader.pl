@@ -6,7 +6,6 @@ use Carp;
 use strict; 
 use warnings;
 
-
 my $in = shift; 
 
 open I,$in || croak"$!\n";

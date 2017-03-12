@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+
 use strict;
 use warnings;
 use Data::Dumper;
@@ -8,13 +9,8 @@ use feature 'say';
 use Bio::SeqIO;
 
 # need better later
-
-
-
 my ($list,$proteomdb) = @ARGV;
 my %id_hash = ();
-
-
 
 open (FILE,$list) || croak "cannot open $list:$!\n";
 while(<FILE>){

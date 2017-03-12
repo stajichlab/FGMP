@@ -1,6 +1,6 @@
 
 # FGMP v 1.0
-Fungal Genomics Mapping Pipeline
+Fungal Genome Mapping Pipeline
 
 Released: 4/8/25
 
@@ -19,7 +19,7 @@ Released: 4/8/25
 # ---------------------------------------- #
 # 1. FGMP description
 
-FGMP (Fungal Gene Mapping Project) is a bioinformatic pipeline designed to 
+FGMP (Fungal Genome Mapping Project) is a bioinformatic pipeline designed to 
 provide in an unbiased manner a set of high quality gene models from fungal
 genome assembly. The strategy is based on the screening of the genome using a 
 set of highly diversified fungal proteins, that is espected to represent a realistic 

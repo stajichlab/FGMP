@@ -1,6 +1,8 @@
-#!/opt/perl/5.16.3/bin/perl -w
+#!/usr/bin/env perl
 
 use strict; 
+use warnings;
+
 use Carp; 
 use feature 'say'; 
 use Data::Dumper;

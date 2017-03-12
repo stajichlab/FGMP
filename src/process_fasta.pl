@@ -1,6 +1,4 @@
-#!/opt/perl/5.16.3/bin/perl
-
-
+#!/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/bin/perl -w
 
 use strict;
 use warnings;
@@ -12,19 +10,11 @@ my $end_pos = $ARGV[2];
 
 my $in = Bio::SeqIO->new ( -file => $in_file, -format => 'fasta');
 my $out = Bio::SeqIO->new( -file => ">$in_file.out", -format => 'fasta');
-
-
 while (my $seq = $in->next_seq() ) {
-
     $seq->display_id( $seq->display_id() . "_$start_pos-$end_pos" );
-
 	if (($seq->length) > $end_pos){
     		$out->write_seq( $seq->trunc($start_pos, $end_pos) );
-		
 	} else {
 		$out->write_seq( $seq->trunc($start_pos,$seq->length));
-		
 	}
-
-
 }

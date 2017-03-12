@@ -1,5 +1,4 @@
-#!/usr/bin/perl -w
-
+#!/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/bin/perl -w
 
 use strict; 
 use feature 'say';
@@ -32,7 +31,7 @@ GetOptions(
 	    "cutoff=f" => \$completeCutoff 
 );
 
-my ($hmmsearchOut,$cutoff,$consMarkers,$tag,$nhmmerOut,$fucesNames,$reads) = @ARGV; 
+my ($hmmsearchOut,$cutoff,$consMarkers,$tag,$nhmmerOut,$fucesNames,$readsFile,$multicopiesSearch) = @ARGV; 
 
 # ---------------------------------------------- #
 #
@@ -60,18 +59,34 @@ if (!(-e "$nhmmerOut")){
 }
 
 if (!("$fucesNames")){
-	warn"Cannot find fUCEs names:$fucesNames\n";
+	warn"Cannot find fUCEs names: $fucesNames\n";
 	exit(1);
 }
 
-# ---------------------------------------------- #
+if (!("$multicopiesSearch")){
+	warn"Cannot find multicopies genes search file: $multicopiesSearch\n";
+	exit(1);
+}
+
+#---------------------------------------------- #
 # parse nhmmer data
-# ---------------------------------------------- #
+# --------------------------------------------- #
 # return how many fUCEs are found in the genome
-my ($fucesFound,$fucesMissing) = parse_nhmerData($nhmmerOut,$fucesNames);
+my ($fucesFound,$fucesMissing,$totalfuces) = parse_nhmerData($nhmmerOut,$fucesNames);
 
 my %fucesFound = %$fucesFound;
 my %fucesMissing = %$fucesMissing;
+my $allfuces = $$totalfuces;
+
+# ---------------------------------------------- #
+# load multicopies genes data
+# ---------------------------------------------- #
+my @multicopiesData = loadMulticopiesData($multicopiesSearch);
+
+# ---------------------------------------------- #
+#  load search in reads data
+#  ---------------------------------------------- #
+my $reads = loadreadsData($readsFile);
 
 # ---------------------------------------------- #
 # parse cutoff file and record model score cutoff 
@@ -128,18 +143,14 @@ foreach $model (keys %hmmName){
 		unless ($seq2scorel{$cand} eq 'NOT FOUND') { # skip those models without hits
 			
 			# check that the best seq pass the filtering cuoff
-			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.3)){ # 0.4 is an empirically determined value (seems to work best for Anid and Ncra
-		
+			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.3)){ 
         
 			# I catch model with significnat hits in the preds
 		 	
 			if ($markers{$model}){
 				 $significantmodel{$model} = $model;
-			#	say "TES1\t$markers{$model} is a FGMP markers";
 			} else {
-			#	say "TEST2\t$model is not part of FGMP conserved markers";
 			}
-
 
 		# now iterate to pick the best seq based on score
 				unless ($seq2scorel{$cand} < $scoretmp){
@@ -170,7 +181,7 @@ foreach $m (keys %markers){
 # ---------------------------------------------- #
 # EXTRACT ALN LENGTH FOR BEST CANDIDATES
 # ---------------------------------------------- #
-&report("...EXTRACTING ALN LENGHT FOR THE BEST CANDIDATE");
+&report("...EXTRACTING ALN LENGTH FOR THE BEST CANDIDATE");
 my %seq2alnLen = (); 
 my $el = "";
 foreach $el (keys %seq2model){
@@ -183,14 +194,9 @@ foreach $el (keys %seq2model){
 # ---------------------------------------------- #
 &report("...TRACKING ABBERANT PROTEINS");
 
-#say Dumper $hmmAlgnlen;
-
 # key = seq xxx = value = AB|NORM
 my ($abberantProteins,$countAbb) = isAbberrant(\%seqLen,\%hmmAlgnlen,\%seq2model); 
 my %abberantProteins = %$abberantProteins;
-
-#say Dumper \%seqLen;
-#say Dumper \%hmmAlgnlen;
 
 # ---------------------------------------------- #
 # check that protein cover at least 70% of the 
@@ -255,14 +261,14 @@ my $totalFgmp = scalar (keys %markers);
 my $completness = sprintf("%.1f",(($fgmpMarkers / $totalFgmp) * 100));
 my $missingFGMPmarkers = scalar %missingFGMPmarkers;
 my $ucesFound = scalar(keys %fucesFound);
-my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / 172) * 100));
-my $markersInReads = sprintf("%.1f",(($reads / 593) * 100));
+my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / $allfuces) * 100));
+my $markersInReads = sprintf("%.1f",(($reads / 593) * 100)) unless ($reads eq 'NA');
 
 # printing report 
 	my $logsum .= "| ---------------------------------------------------------- |\n";
-	   $logsum .= "|\tfUCEs report\n";
+	   $logsum .= "|\tFungal Highly conserved elements (FHCEs) report\n";
 	   $logsum .= "| ---------------------------------------------------------- |\n"; 
-	   $logsum .= "|\tNUM OF UCEs found:\t$ucesFound out of 172\n";
+	   $logsum .= "|\tNUM OF UCEs found:\t$ucesFound out of $allfuces\n";
 	   $logsum .= "|\tUCEs completion estimation:\t($ucesFoundPercent\%)\n"; 
 	   $logsum .= "| ---------------------------------------------------------- |\n";
 	   $logsum .= "|\t### MISSING fUCEs\n\n"; 	   
@@ -296,14 +302,33 @@ my $markersInReads = sprintf("%.1f",(($reads / 593) * 100));
            $logsum .= "| ---------------------------------------------------------- |\n";
 	   $logsum .= "|\tNumber of markers detected in reads:\t$reads\n";
 	   $logsum .= "|\tEstimate completeness:\t$markersInReads (%)\n";
+	   
+     	   $logsum .= "| ---------------------------------------------------------- |\n";
+           $logsum .= "|\tSUMMARY OF MULTICOPY GENES ANALYSIS\n";
+           $logsum .= "| ---------------------------------------------------------- |\n";
+	
+	   $logsum .= "|\t### MULTICOPIES GENES WITH LOW COPIES NUMBER\n";
+
+	   if ( @multicopiesData == 0 ) {
+	  	$logsum .= "|\t33 MULTICOPY GENES ARE IN MULTICOPIES\nno evicence of collapsed regions\n";	
+	 } else {
+	   foreach my $mult ( @multicopiesData ) {
+			if ( $mult eq '' ){
+				$logsum .= "|\t33 MULTICOPY GENES ARE IN MULTICOPIES\n\tNo evicence of collapsed regions\n";
+			} else {
+				$logsum .="|\t$mult\n";
+	   		}
+		}
+	}
 	   $logsum .= "| ---------------------------------------------------------- |\n\n";
 	   $logsum .= "| These results are based on the set of genes selected by OHC & JES #\n\n";
 	   $logsum .= "| Key:\n";
 	   $logsum .= "| Proteins = 593 conserved fungal genes\n";
-	   $logsum .= "| DNA = 172 fungal ultraconserved elements\n";
+	   $logsum .= "| DNA = $allfuces fungal highly conserved elements\n";
 	   $logsum .= "| \%compleness = percent of 593 FCGs in the dataset\n";
 	   $logsum .= "|---------------------------------------------------------- |\n";
-	  
+	
+  
 	 io("$hmmsearchOut.summary_report")->write($logsum);
 
 
@@ -377,9 +402,7 @@ sub extractSeqLenAndmodelNames {
 
 sub load {
 	my ($data) = @_; 
-
 	my %h1 = (); 
-
 	my $in = io("$data");
 	   $in->autoclose(0);
 	   while ( my $ln = $in->getline || $in->getline){
@@ -463,8 +486,10 @@ sub parse_nhmerData {
 	   while ( my $nhl = $nh->getline || $nh->getline ) {
 	   chomp $nhl; 
 		next if $nhl =~ m/^#/; 
-			my ($g) = $nhl =~/\s+(G\.\d+)\s+/;
-			$detected{$g} = 'x';	
+		#my ($g) = $nhl =~/\s+(FG\d+\.1)\s+/;
+		my @nd = split /\s+/, $nhl;
+		my $g = $nd[2];	
+		$detected{$g} = 'x';	
 	} 
 	# soustract
 	my $i = "";
@@ -476,5 +501,27 @@ sub parse_nhmerData {
 			$missing{$i} = $i;
 		}
 	}	
-	return(\%found,\%missing);	
+	my $totalfucs = scalar (keys %all);
+
+	return(\%found,\%missing, \$totalfucs);	
 }
+sub loadMulticopiesData {
+	my @mData = "";
+	my $mucop = io(@_);
+	   $mucop->autoclose(0);
+	   while ( my $mucopl = $mucop->getline || $mucop->getline ) {
+	   chomp $mucopl; 
+		push(@mData,$mucopl);  
+	}
+	return(@mData);
+
+}
+sub loadreadsData {
+	my $rf = io(@_);
+	   $rf->autoclose(0);
+	    while (my $rfl = $rf->getline || $rf->getline ){
+	    chomp $rfl;
+		return($rfl);
+	}
+}
+

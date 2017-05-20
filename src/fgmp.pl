@@ -241,10 +241,10 @@ if (-s "$genome.preds.filtered"){
 	warn "A filtered file already exists $genome.preds.filtered and contains $countFil\n";
 	} else {
 		# protein makers
-# 		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
+ 		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
 
 		# fUCEs
- #		Fgmp::execute("nhmmer -E 1e-15 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
+  		Fgmp::execute("nhmmer -E 1e-15 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
 		
 		# search in reads
 		my $makersFoundInReads = "";

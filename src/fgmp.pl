@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/env perl -w
 
 ##########################################################################
 #                                                                        #
@@ -241,10 +241,10 @@ if (-s "$genome.preds.filtered"){
 	warn "A filtered file already exists $genome.preds.filtered and contains $countFil\n";
 	} else {
 		# protein makers
- 		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
+# 		Fgmp::execute("hmmsearch --cpu $threads --domtblout $WRKDIR/$genome.unfiltered.renamed.hmmsearch $hmm_profiles $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.log");
 
 		# fUCEs
- 		Fgmp::execute("nhmmer -E 1e-15 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
+ #		Fgmp::execute("nhmmer -E 1e-15 --noali  --cpu $threads --dfamtblout $WRKDIR/$genome.nhmmer.out $fuces_hmm $WRKDIR/$genome > /dev/null 2>&1");
 		
 		# search in reads
 		my $makersFoundInReads = "";
@@ -260,13 +260,15 @@ if (-s "$genome.preds.filtered"){
 		Fgmp::check_multicopies("$WRKDIR/$genome.unfiltered.renamed.hmmsearch",$multicopies);
 		
 		# filtering	
-		Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $mark_file $tag $WRKDIR/$genome.nhmmer.out $fuces_prefix makersFoundInReads.txt $WRKDIR/$genome.unfiltered.renamed.hmmsearch.multicopies_check.csv --cutoff 0.7"); 
-	
+		#Fgmp::execute("perl $FGMP/src/filter_unfiltByScore.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch $cutoff_file $mark_file $tag $WRKDIR/$genome.nhmmer.out $fuces_prefix makersFoundInReads.txt $WRKDIR/$genome.unfiltered.renamed.hmmsearch.multicopies_check.csv --cutoff 0.7"); 
+		Fgmp::filter_unfiltByScore("$WRKDIR/$genome.unfiltered.renamed.hmmsearch",$cutoff_file,$mark_file,$tag,"$WRKDIR/$genome.nhmmer.out",$fuces_prefix,"makersFoundInReads.txt","$WRKDIR/$genome.unfiltered.renamed.hmmsearch.multicopies_check.csv");
 	# extract fasta
 	Fgmp::execute("grep \'\^Seq\' $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report | cut -f 1 > $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp");
-	Fgmp::execute("$FGMP/src/retrieveFasta.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.bestPreds.fas");
+	#Fgmp::execute("$FGMP/src/retrieveFasta.pl $WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp $WRKDIR/$genome.unfiltered.renamed > $WRKDIR/$genome.bestPreds.fas");
+	Fgmp::retrieveFasta("$WRKDIR/$genome.unfiltered.renamed.hmmsearch.full_report.tmp","$WRKDIR/$genome.unfiltered.renamed","$WRKDIR/$genome.bestPreds.fas");
 }
-push(@clean,"$genome.unfiltered.renamed","$genome.unfiltered.renamed.hmmsearch","$genome.unfiltered.renamed.hmmsearch.log","$genome.unfiltered.renamed.hmmsearch.full_report.tmp","$genome.db.nhr","$genome.db.nin,makersFoundInReads.txt");
+	
+push(@clean,"$genome.unfiltered.renamed","$genome.unfiltered.renamed.hmmsearch","$genome.unfiltered.renamed.hmmsearch.log","$genome.unfiltered.renamed.hmmsearch.full_report.tmp","$genome.db.nhr","$genome.db.nin","$genome.db.nsq","$genome.db.nin,makersFoundInReads.txt");
 
 # ----------------------------------- #
 # CLEANING

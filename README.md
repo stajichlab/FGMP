@@ -1,6 +1,6 @@
 
 # FGMP v 1.0
-Fungal Genomics Mapping Pipeline
+Fungal Genome Mapping Pipeline
 
 Released: 4/8/25
 
@@ -22,7 +22,7 @@ Released: 4/8/25
 FGMP (Fungal Gene Mapping Project) is a bioinformatic pipeline designed to 
 provide in an unbiased manner a set of high quality gene models from fungal
 genome assembly. The strategy is based on the screening of the genome using a 
-set of highly diversified fungal proteins, that is espected to represent a realistic 
+set of highly diversified fungal proteins, that is expected to represent a realistic 
 snapshot of fungal diversity. This approach is likely to capture homologs from any 
 fungal genome. FMP is based on 593 protein markers and 172 genomic DNA markers 
 are conserved in fungi.  
@@ -31,7 +31,7 @@ A local version of FGMP can be installed on UNIX platforms. The tool requires th
 pre-installation of Perl, NCBI BLAST, HMMER, EXONERATE and AUGUSTUS. 
 
 The pipeline uses information from the selected genes of 40 fungi by first using TBLASTN to 
-identify candidate regions in a new genome. Gene structures are delinated using EXONERATE and AUGUSTUS
+identify candidate regions in a new genome. Gene structures are delineated using EXONERATE and AUGUSTUS
 and validated using HMMER. At the end FGMP produces a set of best predictions and an estimation of the genome 
 completeness of the genome analyzed. 
 
@@ -157,8 +157,16 @@ launch the following command and compare the output with the sample files in 'sa
 	 note: the configuration file 'fgmp.config' need to be placed in the current directory 
 
 # running on cluster (example)
-	
-	#PBS -l nodes=1:ppn=4,mem=8gb -N sample_fg -j oe -l walltime=200:00:00
+
+	#!/usr/bin/bash
+
+	#PBS -l nodes=1:ppn=4,mem=8gb -N FGMP -j oe -l walltime=200:00:00
+
+	module load ncbi-blast/2.2.31+
+	module load exonerate/2.2.0
+	module load hmmer/3.1b2
+	module load emboss/6.6.0
+	module load perl/5.20.2
 
 	CPU=6
 
@@ -166,15 +174,13 @@ launch the following command and compare the output with the sample files in 'sa
  		CPU=$PBS_NUM_PPN
 	fi
 
-	export FGMP=/path/to/fgmp/1.0
-	export PERL5LIB="/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/lib:$FGMP/lib"
+	export FGMP=/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0
+	export PERL5LIB="/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/lib/perl5:/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/lib/site_perl:/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/lib:$FGMP/lib"
 
-	cd /fgmp/1.0/sample
-
-	perl $FGMP/src/fgmp.pl \
-	-g Mycosphaerella_graminicola_IPO323.Mycgr3.v2.fasta \
-	-T $CPU
-
+	time perl $FGMP/src/fgmp.pl \
+	-g Pbras_V2.fasta --fuces_hmm all.hmm --fuces_prefix all.txt -T 6 --fuces_hmm all.hmm --fuces_prefix all.txt
+	
+	
 	FGMP will create some intermediate files during the annotation.
 
 	# - final files:

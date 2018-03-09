@@ -12,7 +12,7 @@ use Scalar::Util qw(looks_like_number);
 use Getopt::Long;
 
 our ($VERSION, $DEBUG, $CALLER);
-$VERSION = '0.1';
+$VERSION = '1.0';
 
 sub load_paths {
 	my ($fmpdir,$wrkdir,$tmpdir) = ("","","");

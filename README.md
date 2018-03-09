@@ -5,7 +5,7 @@ Released: 3/9/2018
 
 [![Build Status](https://travis-ci.org/ocisse/FGMP.svg?branch=master)](https://github.com/ocisse/FGMP)
 
-# *** Contents *** #
+## *** Contents *** #
 
 + 1. FGMP description ?
 + 2. Installing FGMP
@@ -15,38 +15,39 @@ Released: 3/9/2018
 + 6. Authors and help
 + 7. Citing FGMP
 
-# ---------------------------------------- #
-# 1. FGMP description
+## ---------------------------------------- #
+## 1. FGMP description
 
 FGMP (Fungal Genome Mapping Project) is a bioinformatic pipeline designed to 
 provide in an unbiased manner a set of high quality gene models from fungal
 genome assembly. The strategy is based on the screening of the genome using a 
 set of highly diversified fungal proteins, that is expected to represent a realistic 
 snapshot of fungal diversity. This approach is likely to capture homologs from any 
-fungal genome. FMP is based on 593 protein markers and 172 genomic DNA markers 
+fungal genome. FGMP is based on 593 protein markers and 31 genomic DNA markers 
 are conserved in fungi.  
 
 A local version of FGMP can be installed on UNIX platforms. The tool requires the
 pre-installation of Perl, NCBI BLAST, HMMER, EXONERATE and AUGUSTUS. 
 
-The pipeline uses information from the selected genes of 40 fungi by first using TBLASTN to 
+The pipeline uses information from the selected genes of 25 fungi by first using TBLASTn to 
 identify candidate regions in a new genome. Gene structures are delineated using EXONERATE and AUGUSTUS
-and validated using HMMER. At the end FGMP produces a set of best predictions and an estimation of the genome 
-completeness of the genome analyzed. 
+and validated using HMMER. At the end of the process FGMP produces a set of best predictions and an estimation of the genome 
+completeness. 
 
-FGMP use NHMMER to screen the genome with ultraconserved DNA markers. It is also possible to search 
-protein markers directly in the unassembled reads. Reads are randomly sampled using reservoir sampling
+FGMP use NHMMER to screen the genome with highly conserved DNA segments. When raw reads are provided in fasta format, 
+FGMP search protein markers directly in the unassembled reads. Reads are randomly sampled using reservoir sampling
 algorithm and screen using BLASTx.
 
 FGMP source code and documentation are available under the GNU GENERAL PUBLIC LICENSE.
 
-# ---------------------------------------- #
-# 2. running FGMP 
+## ---------------------------------------- #
+## 2. running FGMP 
 
 The FGMP distribution includes several directories and files. Source codes
 and documentation are provided in the distribution. To decompress 
 simply enter the following command in the shell: 
 
+git clone https://github.com/ocisse/FGMP.git
 
 The directory 'fgmp_v1.0' will be created in your current directory. 
 
@@ -60,8 +61,8 @@ FGMP requires the pre-installation of the following software:
 - augustus (tested using version 3.0.3)
 
 
-# ---------------------------------------- #
-# 3. Files listing
+## ---------------------------------------- #
+## 3. Files listing
 
 The FGMP distribution includes the following files and directories:
 
@@ -79,26 +80,17 @@ NOTE: augustus distribution should be placed in utils/
 example: FGMP.v.1.0/1.0/utilsaugustus-3.0.3
 
 
-# ---------------------------------------- #
-# 4. running FGMP
+## ---------------------------------------- #
+## 4. running FGMP
 
 **** IMPORTANT ****
 
 IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files
 
-In the file 'fgmp.config' contains several environmental variables
-that need to be set up by the user.
+The file contains several environmental variables that need to be set up by the user.
 
-It contains the following variables:
-
-FGMP	- the path to the FGMP folder
-WRKDIR	- working directory	(where are the fasta files)
-
-For example: 
-
-FGMP=/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0
-
-WRKDIR=/bigdata/ocisse/Project3_cema/Version1/src/fgmp/1.0/sample
+FGMP:	- the path to the FGMP folder
+WRKDIR:	- working directory	(where are the fasta files)
 
 FGMP uses a custom library Fgmp.pm. You need set the PERL5LIB environment variable 
 to use or you can simply copy the modules to the Perl module directory that is 
@@ -108,11 +100,6 @@ Before running FGMP, type the following commands:
 	
 	export FGMP=/path/to/fgmp
 	export PERL5LIB="$PERL5LIB:$FGMP/lib"
-
-	example:
-	export FGMP=/rhome/ocisse/ocisse/tmp/FGMP.v.1.0/1.0
-	export PERL5LIB="$PERL5LIB:$FGMP/lib"
-
 
 To use FGMP with default settings run:
 	fgmp.pl -g < genomic_fasta_file > 
@@ -135,12 +122,9 @@ to all subsequent softwares.
 Example:	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
 
 
-If you have another set of proteins you want use instead, simply provide them. 
-
-
 	
-# ---------------------------------------- #
-# 5. TESTING FGMP
+## ---------------------------------------- #
+## 5. TESTING FGMP
 
 launch the following command and compare the output with the sample files in 'sample_output'
 
@@ -148,7 +132,7 @@ launch the following command and compare the output with the sample files in 'sa
 
 	 note: the configuration file 'fgmp.config' need to be placed in the current directory 
 
-# running on cluster (example)
+## running on cluster (example)
 
 	#!/usr/bin/bash
 
@@ -193,15 +177,18 @@ launch the following command and compare the output with the sample files in 'sa
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
 
-# ---------------------------------------- #
-# 6. AUTHORS AND HELP
+## ---------------------------------------- #
+## 6. AUTHORS AND HELP
 
 FGMP has been developped by Ousmane H. Cisse (ousmanecis@gmail.com) and Jason E. Stajich 
 (jason.stajich@ucr.edu).
  
 FGMP home page is at https://github.com/stajichlab/FGMP
 
-# ---------------------------------------- #
-# 7. Citing FGMP
+or https://github.com/ocisse/FGMP
 
-OHC AND JES (2016) FGMP: assessing genome completion in fungal genomic data. manuscript in preparation.
+## ---------------------------------------- #
+## 7. Citing FGMP
+
+Cisse, O. H. and Stajich J.E.S. FGMP: assessing fungal genome completeness and gene content.
+bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

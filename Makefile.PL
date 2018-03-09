@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
     NAME              => 'Fgmp',
-    VERSION_FROM      => 'lib/Fgmp.pm', # finds $VERSION
+    VERSION_FROM      => 'lib/FGMP.pm', # finds $VERSION
     # These versions are the lowest ones I've test the module with.
     PREREQ_PM         => {'Test::More'          => '0.45',
                           'Filter::Simple'      => '0.78',

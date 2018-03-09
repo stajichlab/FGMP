@@ -1,7 +1,9 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 
-use Data::Dumper; 
-use Carp; 
+use strict;
+use warnings;
+use Data::Dumper;
+use Carp;
 use feature 'say';
 use Bio::SeqIO;
 
@@ -10,9 +12,14 @@ my %id_hash = ();
 
 open (FILE,$list) || croak "cannot open $list:$!\n";
 while(<FILE>){
-chomp; 
+chomp;
 	$id_hash{$_} = 1;
+<<<<<<< HEAD:src/retrieveFasta.pl
 } 
+=======
+
+}
+>>>>>>> stajichlab/master:1.0/src/retrieveFasta.pl
 
 $new=Bio::SeqIO->new(
 			-file=> $proteomdb,

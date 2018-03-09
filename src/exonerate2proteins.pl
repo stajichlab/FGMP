@@ -1,6 +1,7 @@
-#!/usr/bin/env perl -w
+#!/usr/bin/env perl
 
 use strict; 
+use warnings;
 use Carp; 
 use feature 'say'; 
 use IO::All; 

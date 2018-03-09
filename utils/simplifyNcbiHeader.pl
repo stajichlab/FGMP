@@ -1,9 +1,10 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 use feature 'say'; 
 use Data::Dumper; 
 use Carp; 
 use strict; 
+use warnings;
 
 
 my $in = shift; 

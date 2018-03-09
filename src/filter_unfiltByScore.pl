@@ -1,5 +1,8 @@
 #!/usr/bin/env perl
+<<<<<<< HEAD
 
+=======
+>>>>>>> stajichlab/v2.0-hyphaltip_audit
 
 use strict; 
 use warnings;
@@ -33,6 +36,7 @@ GetOptions(
 	    "cutoff=f" => \$completeCutoff 
 );
 
+
 my ($hmmsearchOut,$cutoff,$consMarkers,$tag,$nhmmerOut,$fucesNames,$readsFile,$multicopiesSearch) = @ARGV; 
 
 # ---------------------------------------------- #
@@ -61,6 +65,7 @@ if (!(-e "$nhmmerOut")){
 }
 
 if (!("$fucesNames")){
+
 	warn"Cannot find fUCEs names: $fucesNames\n";
 	exit(1);
 }
@@ -145,13 +150,17 @@ foreach $model (keys %hmmName){
 		unless ($seq2scorel{$cand} eq 'NOT FOUND') { # skip those models without hits
 			
 			# check that the best seq pass the filtering cuoff
-			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.3)){ 
+
+			if ($seq2scorel{$cand} >= ($hmmcutoff{$model} * 0.3)){ # 0.4 is an empirically determined value (seems to work best for Anid and Ncra
         
 			# I catch model with significnat hits in the preds
 		 	
 			if ($markers{$model}){
 				 $significantmodel{$model} = $model;
+
+			#	say "TES1\t$markers{$model} is a FGMP markers";
 			} else {
+			#	say "TEST2\t$model is not part of FGMP conserved markers";
 			}
 
 		# now iterate to pick the best seq based on score
@@ -183,7 +192,8 @@ foreach $m (keys %markers){
 # ---------------------------------------------- #
 # EXTRACT ALN LENGTH FOR BEST CANDIDATES
 # ---------------------------------------------- #
-&report("...EXTRACTING ALN LENGTH FOR THE BEST CANDIDATE");
+
+&report("...EXTRACTING ALN LENGHT FOR THE BEST CANDIDATE");
 my %seq2alnLen = (); 
 my $el = "";
 foreach $el (keys %seq2model){
@@ -196,9 +206,15 @@ foreach $el (keys %seq2model){
 # ---------------------------------------------- #
 &report("...TRACKING ABBERANT PROTEINS");
 
+
+#say Dumper $hmmAlgnlen;
+
 # key = seq xxx = value = AB|NORM
 my ($abberantProteins,$countAbb) = isAbberrant(\%seqLen,\%hmmAlgnlen,\%seq2model); 
 my %abberantProteins = %$abberantProteins;
+
+#say Dumper \%seqLen;
+#say Dumper \%hmmAlgnlen;
 
 # ---------------------------------------------- #
 # check that protein cover at least 70% of the 
@@ -263,6 +279,7 @@ my $totalFgmp = scalar (keys %markers);
 my $completness = sprintf("%.1f",(($fgmpMarkers / $totalFgmp) * 100));
 my $missingFGMPmarkers = scalar %missingFGMPmarkers;
 my $ucesFound = scalar(keys %fucesFound);
+
 my $ucesFoundPercent =	 sprintf("%.1f", (($ucesFound / $allfuces) * 100));
 my $markersInReads = sprintf("%.1f",(($reads / 593) * 100)) unless ($reads eq 'NA');
 
@@ -304,10 +321,10 @@ my $markersInReads = sprintf("%.1f",(($reads / 593) * 100)) unless ($reads eq 'N
            $logsum .= "| ---------------------------------------------------------- |\n";
 	   $logsum .= "|\tNumber of markers detected in reads:\t$reads\n";
 	   $logsum .= "|\tEstimate completeness:\t$markersInReads (%)\n";
-	   
-     	   $logsum .= "| ---------------------------------------------------------- |\n";
-           $logsum .= "|\tSUMMARY OF MULTICOPY GENES ANALYSIS\n";
-           $logsum .= "| ---------------------------------------------------------- |\n";
+     
+     $logsum .= "| ---------------------------------------------------------- |\n";
+     $logsum .= "|\tSUMMARY OF MULTICOPY GENES ANALYSIS\n";
+     $logsum .= "| ---------------------------------------------------------- |\n";
 	
 	   $logsum .= "|\t### MULTICOPIES GENES WITH LOW COPIES NUMBER\n";
 
@@ -322,15 +339,16 @@ my $markersInReads = sprintf("%.1f",(($reads / 593) * 100)) unless ($reads eq 'N
 	   		}
 		}
 	}
+
 	   $logsum .= "| ---------------------------------------------------------- |\n\n";
 	   $logsum .= "| These results are based on the set of genes selected by OHC & JES #\n\n";
 	   $logsum .= "| Key:\n";
 	   $logsum .= "| Proteins = 593 conserved fungal genes\n";
+
 	   $logsum .= "| DNA = $allfuces fungal highly conserved elements\n";
 	   $logsum .= "| \%compleness = percent of 593 FCGs in the dataset\n";
 	   $logsum .= "|---------------------------------------------------------- |\n";
 	
-  
 	 io("$hmmsearchOut.summary_report")->write($logsum);
 
 
@@ -404,7 +422,9 @@ sub extractSeqLenAndmodelNames {
 
 sub load {
 	my ($data) = @_; 
+
 	my %h1 = (); 
+
 	my $in = io("$data");
 	   $in->autoclose(0);
 	   while ( my $ln = $in->getline || $in->getline){
@@ -488,6 +508,7 @@ sub parse_nhmerData {
 	   while ( my $nhl = $nh->getline || $nh->getline ) {
 	   chomp $nhl; 
 		next if $nhl =~ m/^#/; 
+
 		#my ($g) = $nhl =~/\s+(FG\d+\.1)\s+/;
 		my @nd = split /\s+/, $nhl;
 		my $g = $nd[2];	
@@ -503,6 +524,7 @@ sub parse_nhmerData {
 			$missing{$i} = $i;
 		}
 	}	
+
 	my $totalfucs = scalar (keys %all);
 
 	return(\%found,\%missing, \$totalfucs);	
@@ -526,4 +548,3 @@ sub loadreadsData {
 		return($rfl);
 	}
 }
-

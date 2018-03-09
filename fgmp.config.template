@@ -1,6 +1,6 @@
 # paths
-FGMP=/rhome/jstajich/projects/FGMP
-WRKDIR=/rhome/jstajich/projects/FGMP/sample
+FGMP=
+WRKDIR=$FGMP/sample
 BLASTX=blastx
 EXONERATE=exonerate
 SIXPACK=sixpack

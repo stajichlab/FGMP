@@ -89,7 +89,8 @@ IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files
 
 The file contains several environmental variables that need to be set up by the user.
 
-FGMP:	- the path to the FGMP folder
+FGMP:the path to the FGMP folder
+
 WRKDIR:	- working directory	(where are the fasta files)
 
 FGMP uses a custom library Fgmp.pm. You need set the PERL5LIB environment variable 
@@ -117,10 +118,6 @@ to all subsequent softwares.
 				(default: $FGMP/data/profiles_cutOff.tbl)
 	--hmm_profiles		Directory that contains hmm files
 				(default: $FGMP/data/593_cleanMarkers.hmm)
-	
-
-Example:	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
-
 
 	
 ## ---------------------------------------- #
@@ -153,8 +150,9 @@ launch the following command and compare the output with the sample files in 'sa
 	export FGMP=/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0
 	export PERL5LIB="/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/lib/perl5:/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/lib/site_perl:/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/lib:$FGMP/lib"
 
-	time perl $FGMP/src/fgmp.pl \
-	-g Pbras_V2.fasta --fuces_hmm all.hmm --fuces_prefix all.txt -T 6 --fuces_hmm all.hmm --fuces_prefix all.txt
+	time perl $FGMP/src/fgmp.pl -g Pbras_V2.fasta \
+	--fuces_hmm all.hmm --fuces_prefix all.txt \
+	-T 6 --fuces_hmm all.hmm --fuces_prefix all.txt
 	
 	
 	FGMP will create some intermediate files during the annotation.
@@ -175,6 +173,10 @@ launch the following command and compare the output with the sample files in 'sa
 	- sample.dna.unfiltered: unfiltered predicted peptides
 	- sample.dna.unfiltered.renamed : renamed predicted peptides to avoid name conflits
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
+
+Reads can be searched using the following command example:
+
+perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
 
 
 ## ---------------------------------------- #

@@ -1,4 +1,3 @@
-
 # FGMP v 1.0
 Fungal Genome Mapping Pipeline
 

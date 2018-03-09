@@ -19,12 +19,10 @@ Released: 3/9/2018
 ## 1. FGMP description
 
 FGMP (Fungal Genome Mapping Project) is a bioinformatic pipeline designed to 
-provide in an unbiased manner a set of high quality gene models from fungal
+provide in an unbiased manner an estimation of genome completeness of a fungal
 genome assembly. The strategy is based on the screening of the genome using a 
-set of highly diversified fungal proteins, that is expected to represent a realistic 
-snapshot of fungal diversity. This approach is likely to capture homologs from any 
-fungal genome. FGMP is based on 593 protein markers and 31 genomic DNA markers 
-are conserved in fungi.  
+set of highly diversified fungal proteins. This approach is likely to capture homologs from any 
+fungal genome. FGMP is based on 593 protein markers and 31 highly conserved fungal genomic segments .  
 
 A local version of FGMP can be installed on UNIX platforms. The tool requires the
 pre-installation of Perl, NCBI BLAST, HMMER, EXONERATE and AUGUSTUS. 
@@ -34,9 +32,9 @@ identify candidate regions in a new genome. Gene structures are delineated using
 and validated using HMMER. At the end of the process FGMP produces a set of best predictions and an estimation of the genome 
 completeness. 
 
-FGMP use NHMMER to screen the genome with highly conserved DNA segments. When raw reads are provided in fasta format, 
-FGMP search protein markers directly in the unassembled reads. Reads are randomly sampled using reservoir sampling
-algorithm and screen using BLASTx.
+FGMP uses NHMMER to screen the genome with a set of highly conserved DNA segments. When raw reads are provided in fasta format, 
+FGMP searches protein markers directly in the unassembled reads. Reads are randomly sampled using reservoir sampling
+algorithm and screened using BLASTx.
 
 FGMP source code and documentation are available under the GNU GENERAL PUBLIC LICENSE.
 
@@ -44,12 +42,9 @@ FGMP source code and documentation are available under the GNU GENERAL PUBLIC LI
 ## 2. running FGMP 
 
 The FGMP distribution includes several directories and files. Source codes
-and documentation are provided in the distribution. To decompress 
-simply enter the following command in the shell: 
+and documentation are provided in the distribution. Simply enter the following command in the shell: 
 
 git clone https://github.com/ocisse/FGMP.git
-
-The directory 'fgmp_v1.0' will be created in your current directory. 
 
 FGMP requires the pre-installation of the following software: 
 
@@ -66,18 +61,18 @@ FGMP requires the pre-installation of the following software:
 
 The FGMP distribution includes the following files and directories:
 
-- data/				Proteins, profiles and cutoff.
+- data/				Proteins, profiles and cutoff
 - lib/				Perl modules
 - sample/			DNA and protein fasta file to test FGMP.
-- sample_output/	Results provided by FGMP for the test files.
+- sample_output/	Results provided by FGMP for the test files
 - src/				Source code of FGMP.	
-- READE.md			This file.
+- READE.md			This file
 - fgmp.config		a file that needs to be set up with path directories
-- utils/			contains useful scripts (see below)
+- utils/			custom scripts
 
 NOTE: augustus distribution should be placed in utils/
 
-example: FGMP.v.1.0/1.0/utilsaugustus-3.0.3
+example: FGMP/utils/augustus-3.0.3
 
 
 ## ---------------------------------------- #
@@ -85,8 +80,7 @@ example: FGMP.v.1.0/1.0/utilsaugustus-3.0.3
 
 **** IMPORTANT ****
 
-IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files
-
+IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files.
 The file contains several environmental variables that need to be set up by the user.
 
 FGMP:the path to the FGMP folder
@@ -116,6 +110,7 @@ to all subsequent softwares.
 
 	-c, --cutoff_file	Profile cutoffs
 				(default: $FGMP/data/profiles_cutOff.tbl)
+				
 	--hmm_profiles		Directory that contains hmm files
 				(default: $FGMP/data/593_cleanMarkers.hmm)
 
@@ -174,7 +169,7 @@ launch the following command and compare the output with the sample files in 'sa
 	- sample.dna.unfiltered.renamed : renamed predicted peptides to avoid name conflits
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
-Reads can be searched using the following command example:
+Reads can be searched using the following command:
 
 perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
 

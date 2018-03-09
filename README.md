@@ -48,13 +48,6 @@ The FGMP distribution includes several directories and files. Source codes
 and documentation are provided in the distribution. To decompress 
 simply enter the following command in the shell: 
 
-clone from https://github.com/stajichlab/FGMP 
-
-or
-
-wget -np biocluster.ucr.edu/~ocisse/manuscript/FGMP.v.1.0.tar.gz
-
-tar -xvzf FGMP.v.1.0.tar.gz
 
 The directory 'fgmp_v1.0' will be created in your current directory. 
 

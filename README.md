@@ -124,10 +124,10 @@ to all subsequent softwares.
 + Testing
 
 launch the following command and compare the output with the sample files in 'sample_output'
-
+```shell
 	perl $FGMP/src/fgmp.pl -g  NCRA_chr1.fasta -threads 4 --tag OMA
-
-## running on cluster (example)
+```
++ running on a HPC cluster (example)
 ```shell
 	#!/usr/bin/bash
 
@@ -152,15 +152,15 @@ launch the following command and compare the output with the sample files in 'sa
 	--fuces_hmm all.hmm --fuces_prefix all.txt \
 	-T 6 --fuces_hmm all.hmm --fuces_prefix all.txt
 ```
-	
-	FGMP will create some intermediate files during the annotation.
++ Output 	
+FGMP will create some intermediate files during the annotation.
 
-	# - final files:
+final files:
 	- sample.dna.bestPreds.fas	: predicted best predictions (fasta format)
 	- sample.dna.unfiltered.renamed.hmmsearch.full_report: detailed analysis of best predictions
 	- sample.dna.unfiltered.renamed.hmmsearch.summary_report: summary
 
-	# - intermediate files: 
+intermediate files: 
 	- sample.dna.tblastn: 	tblastn output
 	- sample.dna.candidates.fa: Genomic regions extracted based on Tblastn matches coordinates (fasta format)
 	- sample.dna.candidates.fa.p2g: Alignment of 593 proteins to candidates.fa
@@ -172,9 +172,11 @@ launch the following command and compare the output with the sample files in 'sa
 	- sample.dna.unfiltered.renamed : renamed predicted peptides to avoid name conflits
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
-	Reads can be searched using the following command:
-
++ Search in reads (experimental)
+Reads can be searched using the following command:
+```shell
 	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
+```
 
 FGMP home page is at https://github.com/stajichlab/FGMP
 

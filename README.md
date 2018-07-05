@@ -16,7 +16,7 @@ Released: 3/9/2018
 + 7. Citing FGMP
 
 ## ---------------------------------------- #
-## 1. FGMP description
+## Introduction
 
 FGMP (Fungal Genome Mapping Project) is a bioinformatic pipeline designed to 
 provide in an unbiased manner an estimation of genome completeness of a fungal
@@ -38,26 +38,33 @@ algorithm and screened using BLASTx.
 
 FGMP source code and documentation are available under the GNU GENERAL PUBLIC LICENSE.
 
-## ---------------------------------------- #
-## 2. running FGMP 
+## Installation
++ System requirements
+	- Perl 5 (tested with the version 20)
+	- BioPerl-1.6.924
+	- HMMER v3.0    http://hmmer.janelia.org/
+	- NCBI BLASTALL (tested using version 2.2.31+)
+	- exonerate (tested using version 2.2.0)
+	- augustus (tested using version 3.0.3)
 
-The FGMP distribution includes several directories and files. Source codes
-and documentation are provided in the distribution. Simply enter the following command in the shell: 
+These software can be installed via bioconda
 
+```shell
+conda install hmmer
+conda install blast
+conda install exonerate
+conda install augustus
+conda install emboss
+conda install perl-ipc-run
+```
+
+
++ Install
+```shell
+echo "Installation via github"
 git clone https://github.com/ocisse/FGMP.git
 
-FGMP requires the pre-installation of the following software: 
-
-- Perl 5 (tested with the version 20)
-- BioPerl-1.6.924 
-- HMMER v3.0	http://hmmer.janelia.org/
-- NCBI BLASTALL (tested using version 2.2.31+) 
-- exonerate (tested using version 2.2.0)
-- augustus (tested using version 3.0.3)
-
-
-## ---------------------------------------- #
-## 3. Files listing
+## Files listing
 
 The FGMP distribution includes the following files and directories:
 
@@ -70,14 +77,7 @@ The FGMP distribution includes the following files and directories:
 - fgmp.config		a file that needs to be set up with path directories
 - utils/			custom scripts
 
-NOTE: augustus distribution should be placed in utils/
-
-example: FGMP/utils/augustus-3.0.3
-
-
-## ---------------------------------------- #
-## 4. running FGMP
-
++ running FGMP
 **** IMPORTANT ****
 
 IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files.
@@ -115,14 +115,11 @@ to all subsequent softwares.
 				(default: $FGMP/data/593_cleanMarkers.hmm)
 
 	
-## ---------------------------------------- #
-## 5. TESTING FGMP
++ Testing
 
 launch the following command and compare the output with the sample files in 'sample_output'
 
-	 perl $FGMP/src/fgmp.pl -g sample.dna 2> log
-
-	 note: the configuration file 'fgmp.config' need to be placed in the current directory 
+	perl $FGMP/src/fgmp.pl -g  NCRA_chr1.fasta -threads 4 --tag OMA
 
 ## running on cluster (example)
 
@@ -169,23 +166,18 @@ launch the following command and compare the output with the sample files in 'sa
 	- sample.dna.unfiltered.renamed : renamed predicted peptides to avoid name conflits
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
-Reads can be searched using the following command:
+	Reads can be searched using the following command:
 
-perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
+	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
 
-
-## ---------------------------------------- #
-## 6. AUTHORS AND HELP
-
-FGMP has been developped by Ousmane H. Cisse (ousmanecis@gmail.com) and Jason E. Stajich 
-(jason.stajich@ucr.edu).
- 
 FGMP home page is at https://github.com/stajichlab/FGMP
+
+developpment:  https://github.com/ocisse/FGMP
+soon to be merged 
+ 
 
 or https://github.com/ocisse/FGMP
 
-## ---------------------------------------- #
-## 7. Citing FGMP
-
+## Citing FGMP
 Cisse, O. H. and Stajich J.E.S. FGMP: assessing fungal genome completeness and gene content.
 bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

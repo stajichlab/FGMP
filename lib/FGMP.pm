@@ -49,7 +49,6 @@ sub execute {
         my ($cmmd) = @_;
         #warn "###\t$cmmd\n";
         system($cmmd)==0 || croak "cannot execute\t$cmmd:$!\n";
-
 }
 
 sub clean_files {
@@ -78,22 +77,26 @@ sub clean_files {
 sub split_and_run_sixpack {
 	my ($multifasta) = @_; 
 
-	execute("csplit -s -f $multifasta.chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
+	#execute("csplit -s -f $multifasta.chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
+	execute("sed \'s/>/>multi_/g\' $multifasta > $multifasta.tmp");
+	execute("seqretsplit -sequence $multifasta.tmp -outseq multi");
 	execute("rm -rf $multifasta.sixpack_tmp") if (-d "$multifasta.sixpack_tmp");
 	execute("mkdir $multifasta.sixpack_tmp"); 
-	execute("mv $multifasta.chunk_6p\* $multifasta.sixpack_tmp");
+	execute("mv multi*.fasta $multifasta.sixpack_tmp");
+	#execute("mv $multifasta.chunk_6p\* $multifasta.sixpack_tmp");
 	my $io = io("$multifasta.sixpack_tmp");
 	my @contents = $io->all; 
 	
 	my $chk = "";
-	foreach $chk ( @contents) {
-		execute("sixpack -sequence $chk -outfile $chk.sixpack -outseq $chk.orfs -orfminsize 50");
+	foreach $chk (@contents) {
+		execute("sixpack -sequence $chk -outfile $chk.sixpack -outseq $chk.orfs -orfminsize 50 -verbose false");
 	}
 
 	# concatenate
 	execute("cat $multifasta.sixpack_tmp/\*.orfs > $multifasta.orfs");
-	execute("rm -rf $multifasta.sixpack_tmp");
+	execute("rm -rf $multifasta.sixpack_tmp $multifasta.tmp");
 }
+
 
 sub multithread_exonerate {
 	my ($candidateFasta, $cpuAvail, $proteins, $srcdir,$outdir) = @_;
@@ -217,12 +220,15 @@ sub multithread_augustus {
                 $count++;
         }
 
-        # now extract fasta seq for these chunk
-        # and launch exonerate
+        # now extract fasta seq for these chunks
         my $ext = "";
         foreach $ext (@chunksForFastaExtr){
-		push(@run_aug,"$augdir/bin/augustus --species=$speciestag --AUGUSTUS_CONFIG_PATH=$augdir/config $outdir/$ext.fas > $outdir/$ext.gff");
-       		push(@run_gff2aa,"$augdir/scripts/getAnnoFasta.pl $outdir/$ext.gff");
+		#push(@run_aug,"$augdir/bin/augustus --species=$speciestag --AUGUSTUS_CONFIG_PATH=$augdir/config $outdir/$ext.fas > $outdir/$ext.gff");
+		execute("perl $srcdir/retrieveFasta.pl $ext $candidateFasta > $outdir/$ext.fas");   		
+		push(@run_aug,"augustus --species=$speciestag --AUGUSTUS_CONFIG_PATH=$augdir/config $outdir/$ext.fas > $outdir/$ext.gff");
+
+		#push(@run_gff2aa,"$augdir/scripts/getAnnoFasta.pl $outdir/$ext.gff");
+		push(@run_gff2aa,"getAnnoFasta.pl $outdir/$ext.gff");
 		push(@toconcat,"$outdir/$ext.aa");
 	 }
 	return($numOfseqs,$numOfChunks,$numOfseqPerChunks,\@run_aug,\@run_gff2aa,\@toconcat);
@@ -254,7 +260,7 @@ sub execute_and_returnWhendone {
 
 	my %children = ();
 	for my $cmd (@jobs){
-		warn "Command: $cmd started at ".localtime."\n";
+		#warn "Command: $cmd started at ".localtime."\n";
 		my $pid = launch($cmd);
 		$children{$pid} = $cmd;
 	}
@@ -263,7 +269,7 @@ sub execute_and_returnWhendone {
 		my $pid = wait();
 		die $! if $pid < 1;
 		my $cmd = delete($children{$pid});
-		warn "Command: $cmd ended at ".localtime."with \$? = $?.\n";
+		#warn "Command: $cmd ended at ".localtime."with \$? = $?.\n";
 	}
 	my $st = keys (%children);
 	return($st);

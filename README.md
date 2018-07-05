@@ -128,7 +128,7 @@ launch the following command and compare the output with the sample files in 'sa
 	perl $FGMP/src/fgmp.pl -g  NCRA_chr1.fasta -threads 4 --tag OMA
 
 ## running on cluster (example)
-
+```shell
 	#!/usr/bin/bash
 
 	#PBS -l nodes=1:ppn=4,mem=8gb -N FGMP -j oe -l walltime=200:00:00
@@ -151,7 +151,7 @@ launch the following command and compare the output with the sample files in 'sa
 	time perl $FGMP/src/fgmp.pl -g Pbras_V2.fasta \
 	--fuces_hmm all.hmm --fuces_prefix all.txt \
 	-T 6 --fuces_hmm all.hmm --fuces_prefix all.txt
-	
+```
 	
 	FGMP will create some intermediate files during the annotation.
 
@@ -181,9 +181,6 @@ FGMP home page is at https://github.com/stajichlab/FGMP
 developpment:  https://github.com/ocisse/FGMP
 soon to be merged 
  
-
-or https://github.com/ocisse/FGMP
-
-## Citing FGMP
+## Citation
 Cisse, O. H. and Stajich J.E.S. FGMP: assessing fungal genome completeness and gene content.
 bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

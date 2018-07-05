@@ -156,20 +156,31 @@ launch the following command and compare the output with the sample files in 'sa
 FGMP will create some intermediate files during the annotation.
 
 final files:
-	- sample.dna.bestPreds.fas	: predicted best predictions (fasta format)
+	- sample.dna.bestPreds.fas: predicted best predictions (fasta format)
+
 	- sample.dna.unfiltered.renamed.hmmsearch.full_report: detailed analysis of best predictions
+
 	- sample.dna.unfiltered.renamed.hmmsearch.summary_report: summary
 
 intermediate files: 
 	- sample.dna.tblastn: 	tblastn output
+
 	- sample.dna.candidates.fa: Genomic regions extracted based on Tblastn matches coordinates (fasta format)
+
 	- sample.dna.candidates.fa.p2g: Alignment of 593 proteins to candidates.fa
+
 	- sample.dna.candidates.fa.p2g.aa: exonerate alignment matches
+
 	- sample.dna.candidates.fa.p2g.aa.proteins: translated CDS (amino acids)
+
 	- sample.dna.trainingSet: augustus training set
+
 	- sample.dna.trainingSet.gb: augustus training set (genbank format)
+
 	- sample.dna.unfiltered: unfiltered predicted peptides
+
 	- sample.dna.unfiltered.renamed : renamed predicted peptides to avoid name conflits
+
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
 + Search in reads (experimental)

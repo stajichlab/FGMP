@@ -63,19 +63,21 @@ conda install perl-ipc-run
 ```shell
 echo "Installation via github"
 git clone https://github.com/ocisse/FGMP.git
+```
 
 ## Files listing
 
-The FGMP distribution includes the following files and directories:
++ Description
+	The FGMP distribution includes the following files and directories:
 
-- data/				Proteins, profiles and cutoff
-- lib/				Perl modules
-- sample/			DNA and protein fasta file to test FGMP.
-- sample_output/	Results provided by FGMP for the test files
-- src/				Source code of FGMP.	
-- READE.md			This file
-- fgmp.config		a file that needs to be set up with path directories
-- utils/			custom scripts
+	- data/				Proteins, profiles and cutoff
+	- lib/				Perl modules
+	- sample/			DNA and protein fasta file to test FGMP.
+	- sample_output/	Results provided by FGMP for the test files
+	- src/				Source code of FGMP.	
+	- README.md			This file
+	- fgmp.config		a file that needs to be set up with path directories
+	- utils/			custom scripts
 
 + running FGMP
 **** IMPORTANT ****
@@ -92,12 +94,16 @@ to use or you can simply copy the modules to the Perl module directory that is
 available to your Perl installation.
 
 Before running FGMP, type the following commands:
-	
+
+```shell
 	export FGMP=/path/to/fgmp
 	export PERL5LIB="$PERL5LIB:$FGMP/lib"
+```
 
 To use FGMP with default settings run:
+```shell
 	fgmp.pl -g < genomic_fasta_file > 
+```
 
 You can specify the number of cpus to use using the -T option, which will be passed
 to all subsequent softwares.

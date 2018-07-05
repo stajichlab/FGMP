@@ -16,11 +16,11 @@ chomp;
 	$id_hash{$_} = 1;
 } 
 
-$new=Bio::SeqIO->new(
+my $new=Bio::SeqIO->new(
 			-file=> $proteomdb,
 			-format=>"fasta");
 
-while ($seq=$new->next_seq){
+while (my $seq=$new->next_seq){
 	if (defined $id_hash{$seq->id}){
 		print ">", $seq->id,"\n",$seq->seq,"\n";
 	}

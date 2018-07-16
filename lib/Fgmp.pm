@@ -79,6 +79,8 @@ sub split_and_run_sixpack {
 
 	#execute("csplit -s -f $multifasta.chunk_6p -z $multifasta \'/^>/\' \'{*}\'");
 	execute("sed \'s/>/>multi_/g\' $multifasta > $multifasta.tmp");
+	execute("sed \'s/\|/_/g\' $multifasta.tmp > $multifasta.tmp2");
+	execute("mv $multifasta.tmp2 $multifasta.tmp");
 	execute("seqretsplit -sequence $multifasta.tmp -outseq multi");
 	execute("rm -rf $multifasta.sixpack_tmp") if (-d "$multifasta.sixpack_tmp");
 	execute("mkdir $multifasta.sixpack_tmp"); 
@@ -114,9 +116,6 @@ sub multithread_exonerate {
 	my $numOfseqPerChunks = sprintf("%.0f",($numOfseqs / $numOfChunks)); 
 	
 	my $i = 0;
-	# don't worry I catch it here 
-	# the problem with this is that it will print 10 chunk of 8 seqs, but miss one seq
-	# hey this might be a bug if there more cpus than candidate, then the ratio will be less than 1	
 	while ((@seqs) > 1){
 		my @chunk = splice(@seqs,1,$numOfseqPerChunks);
 		my $chunk = join("\t", @chunk);

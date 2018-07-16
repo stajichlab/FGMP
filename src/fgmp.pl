@@ -50,7 +50,7 @@ my @clean = ();
 # loading paths
 my ($FGMP,$WRKDIR,$TMP) = ("","","");
 if (-e 'fgmp.config'){
-	  ($FGMP,$WRKDIR,$TMP) = Fgmp::load_paths('fgmp.config');
+	  ($FGMP,$WRKDIR,$TMPDIR) = Fgmp::load_paths('fgmp.config');
 } else { 
 	croak "$0 requires config file: fgmp.config\n";
 }
@@ -125,7 +125,7 @@ unless (-e "$genome.candidates.fa.p2g"){
 
 	# chunk the candate regions and runn exonerate in parallel # for speed
 	if (defined ($threads) && ($threads >= 2)){
- 		my ($nb_seqs,$nb_chunk,$nb_seq_per_chunk,$fastaJobs,$exonerateJobs) = Fgmp::multithread_exonerate("$genome.candidates.fa","$threads","$protein","$FGMP/src",$WRKDIR);
+ 		my ($nb_seqs,$nb_chunk,$nb_seq_per_chunk,$fastaJobs,$exonerateJobs) = Fgmp::multithread_exonerate("$genome.candidates.fa","$threads","$protein","$FGMP/src",$TMPDIR);
 	
 		&report("CMD:LAUNCHING MULTI-THREAD EXONERATE\n\tNB OF CPUs: \t$threads\n\tNB SEQS TO ANALYZE: $nb_seqs\n\tNB OF CHUNKs: $nb_chunk\n\tAVE NB OF SEQS PER CHUNKS: $nb_seq_per_chunk");
 		

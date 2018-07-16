@@ -107,7 +107,7 @@ if ($platform =~ m/Linux/i){
 # ----------------------------------- #
 &report("INFO\tfinding candidate regions - TBLASTN");
 unless (-e "$genome.candidates.fa"){
-	&run_find_candidate_regions("$WRKDIR/$genome",$protein,$threads);
+	&run_find_candidate_regions($genome,$protein,$threads);
 }
 
 # Implements sixpack to translate from candidate regions, because exonerate misses some regions

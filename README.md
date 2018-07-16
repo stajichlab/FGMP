@@ -81,7 +81,6 @@ cd FGMP && gunzip data/593_cleanMarkers.hmm.gz
 	- utils/			custom scripts
 
 + running FGMP
-**** IMPORTANT ****
 
 IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files.
 The file contains several environmental variables that need to be set up by the user.

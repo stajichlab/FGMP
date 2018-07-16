@@ -396,8 +396,6 @@ SOFTWARE:
 
 		$SOFTWARE - $VERSION
 
-		xxxxxxxxxxxxxxx
-
 USAGE
 
 	$SOFTWARE [options] -g < genome_fasta_file >

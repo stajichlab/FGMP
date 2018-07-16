@@ -1,15 +1,15 @@
 package Fgmp;
 use strict; 
 use IO::All; 
+use Bio::SeqIO;
 use Carp;
+use Data::Dumper;
 use feature 'say';  
+use Getopt::Long;
 use IPC::Open3 qw ( open3 );
 use IPC::Run qw ( run start pump timer timeout );
-use Data::Dumper;
 use List::Util qw(max min);
-use Bio::SeqIO;
 use Scalar::Util qw(looks_like_number);
-use Getopt::Long;
 
 our ($VERSION, $DEBUG, $CALLER);
 $VERSION = '1.0';
@@ -1001,8 +1001,7 @@ sub extractSeqForThismodel {
         if ($f =~ m/$mod/){
                 my @inline = split /\s+/, $f;
                 my ($seqname,$model,$score,$envStarfileenvEnd) = ($inline[0],$inline[3],$inline[7],$inline[19],$inline[20]);
-		# becareful beacuse the header of translated CDS contains the name of OMA groups
-		if ($model ~~ $mod){
+		if ($model eq $mod){
 			# the score of a given seq against a particular model does not change
 			$h{$seqname} = $score;
                         }

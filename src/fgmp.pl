@@ -141,10 +141,10 @@ unless (-e "$genome.candidates.fa.p2g"){
 			
 			# now concatenate the chunkfile into one p2g file
 			if ( $status_exo == '0'){
-				Fgmp::execute("cat $WRKDIR/$genome*.chunk*.p2g > $WRKDIR/$genome.candidates.fa.p2g"); 
-				Fgmp::execute("rm $genome*.chunk*");
+				Fgmp::execute("cat $TMPDIR/$genome*.chunk*.p2g > $TMPDIR/$genome.candidates.fa.p2g"); 
+				#Fgmp::execute("rm $TMPDIR/$genome*.chunk*");
 			} else {
-				# do something cannot conca 
+				# do something cannot concatenate 
 			}
 		} else {
 			# do something : something went wrong with the fasta files

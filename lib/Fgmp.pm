@@ -149,7 +149,7 @@ sub multithread_exonerate {
 			$chktmp .="$chkind\n";
 		}
 		io("$outdir/$candidateFasta.chunk$count.tmp")->write($chktmp);
-		push(@chunksForFastaExtr,"$outdir/$candidateFasta.chunk$count.tmp"); 
+		push(@chunksForFastaExtr,"$candidateFasta.chunk$count.tmp"); 
 		$count++;
 	}
 	
@@ -158,7 +158,7 @@ sub multithread_exonerate {
 	my $ext = ""; 
 	foreach $ext (@chunksForFastaExtr){
 		# You need to update the path later
-		push(@runs_fas,"perl $srcdir/retrieveFasta.pl $ext $candidateFasta > $outdir/$ext.fas");
+		push(@runs_fas,"perl $srcdir/retrieveFasta.pl $outdir/$ext $candidateFasta > $outdir/$ext.fas");
 		push(@run_exo,"exonerate --model protein2genome --percent 5 -q $proteins --showtargetgff Y -t $outdir/$ext.fas --showvulgar F --showalignment T --ryo \'%qi,%ql,%qab,%qae,%ti,%tl,%tab,%tae,%et,%ei,%es,%em,%r,%pi,%ps,%C\' > $outdir/$ext.p2g");
 
 	}

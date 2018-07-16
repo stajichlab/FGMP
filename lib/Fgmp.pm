@@ -149,7 +149,7 @@ sub multithread_exonerate {
 			$chktmp .="$chkind\n";
 		}
 		io("$outdir/$candidateFasta.chunk$count.tmp")->write($chktmp);
-		push(@chunksForFastaExtr,"$candidateFasta.chunk$count.tmp"); 
+		push(@chunksForFastaExtr,"$outdir/$candidateFasta.chunk$count.tmp"); 
 		$count++;
 	}
 	

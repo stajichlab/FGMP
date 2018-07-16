@@ -48,7 +48,7 @@ my $VERSION = "1.0.0";
 my @clean = ();
 
 # loading paths
-my ($FGMP,$WRKDIR,$TMP) = ("","","");
+my ($FGMP,$WRKDIR,$TMPDIR) = ("","","");
 if (-e 'fgmp.config'){
 	  ($FGMP,$WRKDIR,$TMPDIR) = Fgmp::load_paths('fgmp.config');
 } else { 
@@ -302,7 +302,7 @@ push(@clean,"$genome.unfiltered.renamed","$genome.unfiltered.renamed.hmmsearch",
 # ----------------------------------- #
 # CLEANING
 # ----------------------------------- #
-Fgmp::clean_files(\@clean,\$TMP,\$temp_flg);
+Fgmp::clean_files(\@clean,\$TMPDIR,\$temp_flg);
 
 # ----------------------------------- #
 #       SUBS

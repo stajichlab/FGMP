@@ -156,7 +156,7 @@ unless (-e "$genome.candidates.fa.p2g"){
 
 # recovering exonerate translated matches
 unless (-e "$WRKDIR/$genome.candidates.fa.p2g.aa"){
-	Fgmp::execute("cat $WRKDIR/$genome.candidates.fa.p2g | grep -v '^#' | grep -v \'exonerate:protein2genome:local\' > $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
+	Fgmp::execute("cat $TMPDIR/$genome.candidates.fa.p2g | grep -v '^#' | grep -v \'exonerate:protein2genome:local\' > $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
 	Fgmp::execute("perl -pE 's/XXX/$tag/' $FGMP/src/recoverCDS.sh > $FGMP/src/recoverCDS.$tag.sh");  
 	Fgmp::execute("bash $FGMP/src/recoverCDS.$tag.sh $WRKDIR/$genome.candidates.fa.withoutGFF.p2g");
 }

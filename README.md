@@ -63,6 +63,7 @@ conda install perl-ipc-run
 ```shell
 echo "Installation via github"
 git clone https://github.com/ocisse/FGMP.git
+cd FGMP && gunzip data/593_cleanMarkers.hmm.gz
 ```
 
 ## Files listing

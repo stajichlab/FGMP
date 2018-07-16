@@ -448,7 +448,7 @@ COMMAND-LINE OPTIONS
 	
 	--fuces_prefix		 fungal Ultra Conserved Elements (names - one per line please!)
 
-	--multicopies		default: multicopies genes from 1FKG data
+	--multicopies		default: multicopy genes from 1FKG data
 	
 	-t, --tag		tag to use OMA for fgmp, FUNY (Funybase) or CEG (cegma)
 

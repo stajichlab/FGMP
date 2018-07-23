@@ -176,7 +176,8 @@ push (@clean, "$WRKDIR/$genome.candidates.fa", "$WRKDIR/$genome.candidates.fa.wi
 &report("INFO\tAB INITIO PREDS");
 
 #Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/exonerate2hints.pl --in=$WRKDIR/$genome.candidates.fa.p2g --out=$WRKDIR/$genome.trainingSet");
-Fgmp::execute("exonerate2hints.pl --in=$WRKDIR/$genome.candidates.fa.p2g --out=$WRKDIR/$genome.trainingSet");
+# This won't work if launch on HPC, Permission denied (not a problem if install with conda)
+Fgmp::execute("exonerate2hints.pl --in=$TMPDIR/$genome.candidates.fa.p2g --out=$WRKDIR/$genome.trainingSet");
 #Fgmp::execute("$FGMP/utils/augustus-3.0.3/scripts/gff2gbSmallDNA.pl $WRKDIR/$genome.trainingSet $WRKDIR/$genome 100 $WRKDIR/$genome.trainingSet.gb");
 Fgmp::execute("gff2gbSmallDNA.pl $WRKDIR/$genome.trainingSet $WRKDIR/$genome 100 $WRKDIR/$genome.trainingSet.gb");
 

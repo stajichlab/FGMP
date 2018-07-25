@@ -125,7 +125,7 @@ to all subsequent softwares.
 
 launch the following command and compare the output with the sample files in 'sample_output'
 ```shell
-	perl $FGMP/src/fgmp.pl -g  NCRA_chr1.fasta -threads 4 --tag OMA
+	perl $FGMP/src/fgmp.pl -g  NCRA_chr1.fasta -t 4 --tag OMA
 ```
 + running on a HPC cluster (example)
 ```shell
@@ -138,6 +138,7 @@ launch the following command and compare the output with the sample files in 'sa
 	module load hmmer/3.1b2
 	module load emboss/6.6.0
 	module load perl/5.20.2
+	module load augustus/3.03
 
 	CPU=6
 

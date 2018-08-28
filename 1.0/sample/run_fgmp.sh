@@ -1,4 +1,0 @@
-export FGMP=/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0
-export PERL5LIB="/opt/perl/5.16.3/packages/lib/perl5:/opt/perl/5.16.3/packages/lib/site_perl:/opt/arch_independent/share/perl/5.8.8:/opt/illumina-GAPipeline-1.3.2/perl/lib:/bigdata/stajichlab/ocisse/tcoffee/Version_10.00.r1613/perl:/bigdata/stajichlab/ocisse/tcoffee/Version_10.00.r1613/perl:/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/lib:$FGMP/lib"
-cd /bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/analysis/genome_cov/NewRunFgmp
-perl $FGMP/src/fgmp.pl -g Saico_V1.fasta -T 4 --hmm_profiles /bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/module_dev/Ambiguity_check/593_cleanMarkers.hmm --protein /bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/module_dev/Ambiguity_check/593_cleanMarkers.fa --mark_file /bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/module_dev/Ambiguity_check/593_cleanMarkers.txt

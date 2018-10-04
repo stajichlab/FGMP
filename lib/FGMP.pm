@@ -1,4 +1,4 @@
-package Fgmp;
+package FGMP;
 use strict; 
 use IO::All; 
 use Bio::SeqIO;

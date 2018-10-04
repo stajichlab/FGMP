@@ -89,7 +89,7 @@ FGMP:the path to the FGMP folder
 
 WRKDIR:	- working directory	(where are the fasta files)
 
-FGMP uses a custom library Fgmp.pm. You need set the PERL5LIB environment variable 
+FGMP uses a custom library FGMP.pm. You need set the PERL5LIB environment variable 
 to use or you can simply copy the modules to the Perl module directory that is 
 available to your Perl installation.
 

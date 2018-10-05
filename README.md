@@ -1,9 +1,7 @@
-# FGMP v 1.0
+# FGMP 
 Fungal Genome Mapping Pipeline
 
-Released: 3/9/2018
-
-[![Build Status](https://travis-ci.org/ocisse/FGMP.svg?branch=master)](https://github.com/ocisse/FGMP)
+## *** Contents *** #
 
 ## Contents
 
@@ -56,13 +54,14 @@ conda install exonerate
 conda install augustus
 conda install emboss
 conda install perl-ipc-run
+conda install -c bioconda perl-bioperl
 ```
 
 
 + Install
 ```shell
 echo "Installation via github"
-git clone https://github.com/ocisse/FGMP.git
+git clone https://github.com/stajichlab/FGMP.git
 cd FGMP && gunzip data/593_cleanMarkers.hmm.gz
 ```
 

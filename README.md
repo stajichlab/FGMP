@@ -1,8 +1,6 @@
 # FGMP 
 Fungal Genome Mapping Pipeline
 
-## *** Contents *** #
-
 ## Contents
 
 + 1. FGMP description ?

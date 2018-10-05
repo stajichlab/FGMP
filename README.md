@@ -1,10 +1,6 @@
 # FGMP v 1.0
 Fungal Genome Mapping Pipeline
 
-Released: 3/9/2018
-
-#[![Build Status](https://travis-ci.org/ocisse/FGMP.svg?branch=master)](https://github.com/ocisse/FGMP)
-
 ## *** Contents *** #
 
 + 1. FGMP description ?

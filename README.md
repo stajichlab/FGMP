@@ -193,5 +193,5 @@ developpment:  https://github.com/ocisse/FGMP
 soon to be merged 
  
 ## Citation
-Cisse, O. H. and Stajich J.E.S. FGMP: assessing fungal genome completeness and gene content.
+Cisse, O. H. and Stajich J.E. FGMP: assessing fungal genome completeness and gene content.
 bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

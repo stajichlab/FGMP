@@ -99,7 +99,7 @@ Before running FGMP, type the following commands:
 
 To use FGMP with default settings run:
 ```shell
-	fgmp.pl -g < genomic_fasta_file > 
+	fgmp.pl -g < genomic_fasta_file > fgmp_report.out
 ```
 
 You can specify the number of cpus to use using the -T option, which will be passed

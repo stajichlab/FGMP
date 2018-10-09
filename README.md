@@ -37,11 +37,11 @@ FGMP source code and documentation are available under the GNU GENERAL PUBLIC LI
 ## Installation
 + System requirements
 	- Perl 5 (tested with the version 20)
-	- BioPerl-1.6.924
-	- HMMER v3.0    http://hmmer.janelia.org/
-	- NCBI BLASTALL (tested using version 2.2.31+)
-	- exonerate (tested using version 2.2.0)
-	- augustus (tested using version 3.0.3)
+	- BioPerl-1.6.924 http://bioperl.org
+	- HMMER v3.0    http://hmmer.org/
+	- NCBI BLASTALL (tested using version 2.2.31+) ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/
+	- Exonerate (tested using version 2.2.0) https://www.ebi.ac.uk/about/vertebrate-genomics/software/exonerate
+	- Augustus (tested using version 3.0.3) http://augustus.gobics.de/
 
 These software can be installed via bioconda
 
@@ -56,7 +56,8 @@ conda install -c bioconda perl-bioperl
 ```
 
 
-+ Install
+
+Install
 ```shell
 echo "Installation via github"
 git clone https://github.com/stajichlab/FGMP.git

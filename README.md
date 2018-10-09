@@ -187,10 +187,10 @@ Reads can be searched using the following command:
 	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
 ```
 
-FGMP home page is at https://github.com/stajichlab/FGMP
+FGMP main repository page is at https://github.com/stajichlab/FGMP
 
-developpment:  https://github.com/ocisse/FGMP
-soon to be merged 
+Development:  https://github.com/ocisse/FGMP
+(original code and changes to be merged to this repository where needed)
  
 ## Citation
 Cisse, O. H. and Stajich J.E. FGMP: assessing fungal genome completeness and gene content.

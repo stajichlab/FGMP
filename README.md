@@ -55,13 +55,12 @@ conda install perl-ipc-run
 conda install -c bioconda perl-bioperl
 ```
 
-
+Note: Augustus version 3.3 might cause issues when used on Mac OS. We recommended using the version 3.2.3 for Mac.
 
 Install
 ```shell
 echo "Installation via github"
 git clone https://github.com/stajichlab/FGMP.git
-cd FGMP && gunzip data/593_cleanMarkers.hmm.gz
 ```
 
 ## Files listing
@@ -71,32 +70,12 @@ cd FGMP && gunzip data/593_cleanMarkers.hmm.gz
 
 	- data/				Proteins, profiles and cutoff
 	- lib/				Perl modules
-	- sample/			DNA and protein fasta file to test FGMP.
-	- sample_output/	Results provided by FGMP for the test files
+	- sample/			Sample dna
+	- sample_output/		Sample output
 	- src/				Source code of FGMP.	
-	- README.md			This file
-	- fgmp.config		a file that needs to be set up with path directories
-	- utils/			custom scripts
+	- utils/			FGMP scripts
 
 + running FGMP
-
-IMPORTANT - the 'fgmp.config' file needs to be placed where are the fasta files.
-The file contains several environmental variables that need to be set up by the user.
-
-FGMP:the path to the FGMP folder
-
-WRKDIR:	- working directory	(where are the fasta files)
-
-FGMP uses a custom library FGMP.pm. You need set the PERL5LIB environment variable 
-to use or you can simply copy the modules to the Perl module directory that is 
-available to your Perl installation.
-
-Before running FGMP, type the following commands:
-
-```shell
-	export FGMP=/path/to/fgmp
-	export PERL5LIB="$PERL5LIB:$FGMP/lib"
-```
 
 To use FGMP with default settings run:
 ```shell
@@ -123,7 +102,7 @@ to all subsequent softwares.
 
 launch the following command and compare the output with the sample files in 'sample_output'
 ```shell
-	perl $FGMP/src/fgmp.pl -g  NCRA_chr1.fasta -t 4 --tag OMA
+	./fgmp.pl -g sample_test.dna -T 3 --tag OMA
 ```
 + running on a HPC cluster (example)
 ```shell

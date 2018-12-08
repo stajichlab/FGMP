@@ -55,7 +55,7 @@ conda install perl-ipc-run
 conda install -c bioconda perl-bioperl
 ```
 
-Note: Augustus version 3.3 might cause issues when used on Mac OS. We recommended using the version 3.2.3 for Mac.
+Note: Augustus version 3.3 might cause compiling issues on Mac OS (but not on linux). We recommend using the version 3.2.3 for Mac.
 
 Install
 ```shell
@@ -104,32 +104,7 @@ launch the following command and compare the output with the sample files in 'sa
 ```shell
 	./fgmp.pl -g sample_test.dna -T 3 --tag OMA
 ```
-+ running on a HPC cluster (example)
-```shell
-	#!/usr/bin/bash
 
-	#PBS -l nodes=1:ppn=4,mem=8gb -N FGMP -j oe -l walltime=200:00:00
-
-	module load ncbi-blast/2.2.31+
-	module load exonerate/2.2.0
-	module load hmmer/3.1b2
-	module load emboss/6.6.0
-	module load perl/5.20.2
-	module load augustus/3.03
-
-	CPU=6
-
-	if [ $PBS_NUM_PPN ]; then
- 		CPU=$PBS_NUM_PPN
-	fi
-
-	export FGMP=/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0
-	export PERL5LIB="/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/lib/perl5:/opt/linux/centos/7.x/x86_64/pkgs/perl/5.20.2/lib/site_perl:/bigdata/stajichlab/ocisse/Project3_cema/Version1/src/fgmp/1.0/lib:$FGMP/lib"
-
-	time perl $FGMP/src/fgmp.pl -g Pbras_V2.fasta \
-	--fuces_hmm all.hmm --fuces_prefix all.txt \
-	-T 6 --fuces_hmm all.hmm --fuces_prefix all.txt
-```
 + Output 	
 FGMP will create some intermediate files during the annotation.
 

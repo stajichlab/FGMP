@@ -137,16 +137,11 @@ intermediate files:
 	- sample.dna.unfiltered.renamed.hmmsearch : Hmmsearch output
 
 + Search in reads (experimental)
-Reads can be searched using the following command:
+
 ```shell
-	perl $FGMP/src/fgmp.pl -g Ncrassa_V2.fasta -T $CPU -r sd_merge.fq.fasta
+	./fgmp.pl -g sample_test.dna -T $CPU -r sd_merge.fq.fasta
 ```
 
-FGMP main repository page is at https://github.com/stajichlab/FGMP
-
-Development:  https://github.com/ocisse/FGMP
-(original code and changes to be merged to this repository where needed)
- 
 ## Citation
 Cisse, O. H. and Stajich J.E. FGMP: assessing fungal genome completeness and gene content.
 bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

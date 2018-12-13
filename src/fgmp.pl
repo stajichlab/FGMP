@@ -33,6 +33,10 @@ use feature 'say';
 use Data::Dumper;
 use Carp;
 use IO::All;
+use FindBin;
+use lib "$FindBin::Bin/../lib";
+use lib "$FindBin::Bin/lib";
+
 use Getopt::Long qw(:config no_ignore_case bundling);
 use FGMP;
 use IPC::Cmd qw[can_run run run_forked];

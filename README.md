@@ -143,5 +143,7 @@ intermediate files:
 ```
 
 ## Citation
+Cisse, O. H. and J. E. Stajich (2019). FGMP: assessing fungal genome completeness. BMC Bioinformatics 20(1): 184.
+
 Cisse, O. H. and Stajich J.E. FGMP: assessing fungal genome completeness and gene content.
 bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

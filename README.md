@@ -1,3 +1,5 @@
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/fgmp/README.html)
+
 # FGMP 
 Fungal Genome Mapping Pipeline
 
@@ -143,7 +145,8 @@ intermediate files:
 ```
 
 ## Citation
-Cisse, O. H. and J. E. Stajich (2019). FGMP: assessing fungal genome completeness. BMC Bioinformatics 20(1): 184.
+Cisse, O. H. and Stajich, J.E. (2019). FGMP: assessing fungal genome completeness. BMC Bioinformatics 20(1): 184.
+https://rdcu.be/bFV81
 
 Cisse, O. H. and Stajich J.E. FGMP: assessing fungal genome completeness and gene content.
 bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).

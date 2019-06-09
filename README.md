@@ -5,10 +5,10 @@ Fungal Genome Mapping Pipeline
 
 ## Contents
 
-+ 1. FGMP description ?
-+ 2. Installing FGMP
++ 1. Description
++ 2. Installation
 + 3. File Listing
-+ 4. running FGMP
++ 4. Running FGMP
 + 5. Testing FGMP
 + 6. Authors and help
 + 7. Citing FGMP
@@ -147,6 +147,3 @@ intermediate files:
 ## Citation
 Cisse, O. H. and Stajich, J.E. (2019). FGMP: assessing fungal genome completeness. BMC Bioinformatics 20(1): 184.
 https://rdcu.be/bFV81
-
-Cisse, O. H. and Stajich J.E. FGMP: assessing fungal genome completeness and gene content.
-bioRxiv 049619; doi: https://doi.org/10.1101/049619 (2016).
